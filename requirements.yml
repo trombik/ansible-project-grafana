@@ -10,3 +10,4 @@
 - name: trombik.influxdb
 - name: trombik.grafana
 - name: trombik.nginx
+- name: trombik.monit
