@@ -1,0 +1,17 @@
+---
+all:
+  hosts:
+    grafana1.i.trombik.org:
+      vagrant_priority: 11
+      ansible_host: 172.16.100.200
+      vagrant_box: trombik/ansible-openbsd-6.7-amd64
+  children:
+    grafana:
+      hosts:
+        grafana1.i.trombik.org:
+    virtualbox-credentials:
+      children:
+        grafana:
+    virtualbox:
+      children:
+        grafana:

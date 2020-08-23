@@ -1,0 +1,6 @@
+---
+hostname_fqdn: "{{ inventory_hostname }}"
+hosts_map: "{
+  '{{ ansible_default_ipv4.address }}': ['{{ project_influx_service_fqdn }}']
+}"
+project_ingress_address: "{{ ansible_em1['ipv4'][0]['address'] }}"
