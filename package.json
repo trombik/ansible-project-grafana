@@ -1,0 +1,6 @@
+{
+    "url": "https://github.com/trombik/ansible-project-monitoring/",
+    "devDependencies": {
+        "markdownlint-cli": "^0.22.0"
+    }
+}

@@ -1,0 +1,11 @@
+/vendor/
+/.vagrant/
+/.kitchen/
+/.bundle/
+*.retry
+*.swp
+*.pyc
+/.terraform/
+terraform.tfstate*
+.rspec_status
+node_modules
