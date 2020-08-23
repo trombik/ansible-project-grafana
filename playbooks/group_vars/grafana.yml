@@ -213,4 +213,4 @@ monit_rc:
       check process influxdb matching influxd
       start program = "/usr/sbin/rcctl start influxdb"
       stop program = "/usr/sbin/rcctl stop influxdb"
-      if failed host {{ influxdb_bind_address.split(":") | first }} port {{ influxdb_bind_address.split(":") | last }} protocol http for 3 cycles then restart
+      if failed host {{ influxdb_bind_address.split(":") | first }} port {{ influxdb_bind_address.split(":") | last }} protocol http request "/" status = 404 for 3 cycles then restart
