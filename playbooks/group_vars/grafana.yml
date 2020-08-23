@@ -26,41 +26,6 @@ os_grafana_flags:
 
 grafana_flags: "{{ os_grafana_flags[ansible_os_family] }}"
 grafana_addr: 127.0.0.1
-grafana_provisioning_files:
-  - name: datasources/influxdb.yml
-    state: present
-    format: yaml
-    content:
-      apiVersion: 1
-      datasources:
-        - name: InfluxDB
-          type: influxdb
-          access: proxy
-          database: mydatabase
-          user: read
-          password: read
-          url: http://{{ influxdb_bind_address }}
-          jsonData:
-            httpMode: GET
-  - name: provisioning/dashboards/default.yml
-    state: present
-    # raw text
-    content: |
-      # Managed by ansible
-      apiVersion: 1
-      providers:
-        - name: a unique provider name
-          orgId: 1
-          folder: Test folder
-          type: file
-          disableDeletion: false
-          editable: true
-          updateIntervalSeconds: 10
-          options:
-            path: {{ grafana_provisioning_dir }}/dashboards/json
-  - name: provisioning/dashboards/json/empty.js
-    content: |
-      {}
 grafana_conf_file: "{{ grafana_conf_dir }}/config.ini"
 
 grafana_config: |
@@ -166,28 +131,8 @@ nginx_config: |
 
 influxdb_bind_address: 127.0.0.1:8086
 influxdb_databases:
-  - database_name: mydatabase
+  - database_name: sensors
     state: present
-influxdb_users:
-  - user_name: foo
-    user_password: PassWord
-    grants:
-      - database: mydatabase
-        privilege: ALL
-  - user_name: write_only
-    user_password: write_only
-    grants:
-      - database: mydatabase
-        privilege: WRITE
-  - user_name: read_only
-    user_password: read_only
-    grants:
-      - database: mydatabase
-        privilege: READ
-  - user_name: none
-    user_password: none
-  - user_name: bar
-    state: absent
 influxdb_config: |
   reporting-disabled = true
   # this one is bind address for backup process

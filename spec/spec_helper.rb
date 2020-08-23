@@ -54,3 +54,7 @@ def credentials_yaml
 rescue RuntimeError
   YAML.load_file(file)
 end
+
+def group_var(file, var)
+  YAML.safe_load(File.read(Pathname.new("playbooks") + "group_vars" + file))[var]
+end

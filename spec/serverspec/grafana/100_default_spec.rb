@@ -18,3 +18,15 @@ services.each do |s|
     it { should be_running }
   end
 end
+
+user = credentials_yaml["project_grafana_influxdb_user"]
+password = credentials_yaml["project_grafana_influxdb_password"]
+host = group_var("grafana.yml", "influxdb_bind_address").split(":").first
+port = group_var("grafana.yml", "influxdb_bind_address").split(":").last
+
+describe command "influx -host #{Shellwords.escape(host)} -port " \
+  "#{Shellwords.escape(port)} -username #{Shellwords.escape(user)} -password" \
+  "#{Shellwords.escape(password)} -database sensors -execute 'show measurements'" do
+  its(:exit_status) { should eq 0 }
+  its(:stderr) { should eq "" }
+end
