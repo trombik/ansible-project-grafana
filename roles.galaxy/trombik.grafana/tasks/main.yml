@@ -1,0 +1,106 @@
+---
+# tasks file for ansible-role-grafana
+
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- include: "install-{{ ansible_os_family }}.yml"
+
+- name: Create log directory
+  file:
+    path: "{{ grafana_log_dir }}"
+    mode: 0755
+    owner: "{{ grafana_user }}"
+    group: "{{ grafana_group }}"
+    state: directory
+  notify: Restart grafana
+
+- name: Create db directory
+  file:
+    path: "{{ grafana_db_dir }}"
+    mode: 0755
+    owner: "{{ grafana_user }}"
+    group: "{{ grafana_group }}"
+    state: directory
+  notify: Restart grafana
+
+- name: Create grafana_provisioning_dir
+  file:
+    path: "{{ grafana_provisioning_dir }}"
+    mode: 0755
+    owner: root
+    group: "{{ grafana_group }}"
+    state: directory
+  notify: Restart grafana
+
+- name: Create grafana_plugins_dir
+  file:
+    path: "{{ grafana_plugins_dir }}"
+    mode: 0755
+    owner: "{{ grafana_user }}"
+    group: "{{ grafana_group }}"
+    state: directory
+  notify: Restart grafana
+
+- name: Create grafana.conf
+  template:
+    src: grafana.conf.j2
+    dest: "{{ grafana_conf_file }}"
+    mode: 0640
+    group: "{{ grafana_group }}"
+  notify: Restart grafana
+
+- name: Create directories for grafana_provisioning_files
+  file:
+    path: "{{ grafana_provisioning_dir }}/{{ item.name | dirname }}"
+    mode: 0755
+    state: directory
+    group: "{{ grafana_group }}"
+  with_items: "{{ grafana_provisioning_files }}"
+  when:
+    - "not 'state' in item or ('state' in item and item.state == 'present')"
+
+- name: Create grafana_provisioning_files
+  template:
+    src: "{% if 'format' in item and item['format'] == 'yaml' %}provisioning.yml.j2{% else %}provisioning.raw.j2{% endif %}"
+    dest: "{{ grafana_provisioning_dir }}/{{ item.name }}"
+    mode: 0640
+    group: "{{ grafana_group }}"
+  notify: Restart grafana
+  with_items: "{{ grafana_provisioning_files }}"
+  when:
+    - "not 'state' in item or ('state' in item and item.state == 'present')"
+
+- name: Delete grafana_provisioning_files
+  file:
+    path: "{{ grafana_provisioning_dir }}/{{ item.name }}"
+    state: absent
+  notify: Restart grafana
+  with_items: "{{ grafana_provisioning_files }}"
+  when:
+    - "'state' in item and item.state == 'absent'"
+
+- name: Install plug-ins
+  command: "grafana-cli --pluginsDir {{ grafana_plugins_dir }} plugins install {{ item }}"
+  args:
+    creates: "{{ grafana_plugins_dir }}/{{ item }}"
+  # XXX use `match` here because CentOS 7 does not have Jinja2 version 2.8.x
+  # yet.
+  with_items: "{{ grafana_plugins | selectattr('state', 'match', 'present') | map(attribute='name') | list }}"
+  register: __register_plugin_install
+  until: __register_plugin_install is succeeded
+  retries: 5
+  notify: Restart grafana
+
+- name: Remove plug-ins
+  command: "grafana-cli --pluginsDir {{ grafana_plugins_dir }} plugins uninstall {{ item }}"
+  args:
+    removes: "{{ grafana_plugins_dir }}/{{ item }}"
+  # XXX use `match` here because CentOS 7 does not have Jinja2 version 2.8.x
+  # yet.
+  with_items: "{{ grafana_plugins | selectattr('state', 'match', 'absent') | map(attribute='name') | list }}"
+  notify: Restart grafana
+
+- name: Start grafana
+  service:
+    name: "{{ grafana_service }}"
+    state: started

@@ -1,0 +1,21 @@
+---
+
+- name: Install python packages for database management by ansible
+  openbsd_pkg:
+    name: "{{ influxdb_management_packages }}"
+    state: present
+
+- name: Install influxdb
+  openbsd_pkg:
+    name: "{{ influxdb_package }}"
+    state: present
+
+- name: Install influxdb_extra_packages
+  openbsd_pkg:
+    name: "{{ influxdb_extra_packages }}"
+    state: present
+
+- name: Enable influxdb_service
+  service:
+    name: "{{ influxdb_service }}"
+    enabled: yes

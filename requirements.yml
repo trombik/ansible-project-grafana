@@ -1,0 +1,11 @@
+---
+
+- name: trombik.hostname
+- name: trombik.vim
+- name: trombik.zsh
+- name: trombik.hosts
+- name: trombik.git
+- name: trombik.sudo
+- name: trombik.influxdb
+- name: trombik.grafana
+- name: trombik.nginx

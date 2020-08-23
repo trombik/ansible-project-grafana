@@ -1,0 +1,22 @@
+---
+galaxy_info:
+  role_name: influxdb
+  author: Tomoyuki Sakurai
+  description: Install and configure influxdb
+  company: N/A
+  license: BSD
+  min_ansible_version: 2.0
+  platforms:
+    - name: FreeBSD
+      versions:
+        - 12.1
+    - name: OpenBSD
+      versions:
+        - 6.6
+        - 6.7
+    - name: Ubuntu
+      versions:
+        - bionic
+  galaxy_tags:
+    - influxdb
+dependencies: []

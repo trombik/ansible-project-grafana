@@ -1,0 +1,76 @@
+---
+- hosts: localhost
+  roles:
+    - name: trombik.redhat_repo
+      when: ansible_os_family == 'RedHat'
+    - ansible-role-nginx
+  vars:
+    www_root_dir: "{% if ansible_os_family == 'FreeBSD' %}/usr/local/www/nginx{% elif ansible_os_family == 'OpenBSD' %}/var/www/htdocs{% elif ansible_os_family == 'Debian' %}/var/www/html{% elif ansible_os_family == 'RedHat' %}/usr/share/nginx/html{% endif %}"
+    nginx_flags: -q
+    nginx_config: |
+      {% if ansible_os_family == 'Debian' or ansible_os_family == 'RedHat' %}
+      user {{ nginx_user }};
+      pid /run/nginx.pid;
+      {% endif %}
+      worker_processes 1;
+      error_log {{ nginx_error_log_file }};
+      events {
+        worker_connections 1024;
+      }
+      http {
+        include {{ nginx_conf_dir }}/mime.types;
+        include {{ nginx_conf_fragments_dir }}/foo.conf;
+        access_log {{ nginx_access_log_file }};
+        default_type application/octet-stream;
+        sendfile on;
+        keepalive_timeout 65;
+        server {
+          listen 80;
+          server_name localhost;
+          root {{ www_root_dir }};
+          location / {
+            index index.html;
+          }
+          error_page 500 502 503 504 /50x.html;
+          location = /50x.html {
+          }
+        }
+      }
+    nginx_config_fragments:
+      - name: foo.conf
+        config: "# FOO"
+        state: present
+    nginx_extra_packages_by_os:
+      FreeBSD:
+        - security/py-certbot-nginx
+      OpenBSD: []
+      Debian:
+        - nginx-extras
+      RedHat: []
+    nginx_extra_packages: "{{ nginx_extra_packages_by_os[ansible_os_family] }}"
+    redhat_repo:
+      epel:
+        mirrorlist: "http://mirrors.fedoraproject.org/mirrorlist?repo=epel-{{ ansible_distribution_major_version }}&arch={{ ansible_architecture }}"
+        gpgcheck: yes
+        enabled: yes
+
+    nginx_htpasswd_users:
+      - path: /tmp/my_htpasswd
+        owner: root
+        group: "{{ nginx_group }}"
+        create: yes
+        mode: "0640"
+        name: foo
+        password: password
+        state: present
+      - path: /tmp/another_htpaswd
+        group: "{{ nginx_group }}"
+        mode: "0640"
+        name: bar
+        password: password
+        state: present
+      - path: /tmp/my_htpasswd
+        group: "{{ nginx_group }}"
+        name: buz
+        password: password
+        state: present

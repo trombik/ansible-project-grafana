@@ -1,0 +1,13 @@
+---
+- hosts: localhost
+  roles:
+    - ansible-role-zsh
+  vars:
+    os_zsh_additional_packages:
+      OpenBSD: []
+      FreeBSD:
+        - zsh-navigation-tools
+      Debian:
+        - zsh-syntax-highlighting
+      RedHat: zsh-html
+    zsh_additional_packages: "{{ os_zsh_additional_packages[ansible_os_family] }}"

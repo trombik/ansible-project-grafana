@@ -1,0 +1,30 @@
+---
+
+- name: Install python packages for database management by ansible
+  pkgng:
+    name: "{{ influxdb_management_packages }}"
+    state: present
+
+- name: Install influxdb
+  pkgng:
+    name: "{{ influxdb_package }}"
+    state: present
+
+- name: Install influxdb_extra_packages
+  pkgng:
+    name: "{{ influxdb_extra_packages }}"
+    state: present
+
+- name: Enable influxdb_service
+  service:
+    name: "{{ influxdb_service }}"
+    enabled: yes
+
+- name: Create /etc/rc.conf.d/influxd
+  template:
+    dest: "/etc/rc.conf.d/{{ influxdb_service }}"
+    src: FreeBSD.subr.j2
+    validate: sh -n %s
+  register: __create_etc_rc_conf_d_influxd
+  notify:
+    - Restart influxdb

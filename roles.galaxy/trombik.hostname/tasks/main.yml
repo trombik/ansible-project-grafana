@@ -1,0 +1,60 @@
+---
+# tasks file for ansible-role-hostname
+
+- name: "Include vars/{{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Set __hostname_fqdn_defined to no (default)
+  set_fact:
+    __hostname_fqdn_defined: no
+
+- name: Set hostname_short if hostname_fqdn is defined
+  set_fact:
+    hostname_short: "{{ hostname_fqdn.split('.') | first }}"
+    __hostname_fqdn_defined: yes
+  when:
+    - hostname_fqdn is defined
+    - hostname_fqdn != ""
+
+- name: Assert hostname_short is defined and NOT empty
+  assert:
+    msg: hostname_short must be defined and NOT empty
+    that:
+      - hostname_short is defined
+      - hostname_short != ""
+
+# XXX replace `include` with `include_task` after all platforms have recent
+# version of ansible
+- name: "Include configure-{{ ansible_os_family }}.yml"
+  include: "configure-{{ ansible_os_family }}.yml"
+
+- name: Set hostname by hostname(1)
+  command: "hostname {{ hostname_short }}"
+  when:
+    - not __hostname_fqdn_defined
+    - ansible_hostname != hostname_short
+
+- name: Set hostname by hostname(1) (__hostname_fqdn_defined is true)
+  command: "hostname {{ hostname_fqdn }}"
+  when:
+    - __hostname_fqdn_defined
+    - ansible_fqdn != hostname_fqdn
+
+- name: Load facts again
+  setup:
+  when:
+    - not __hostname_fqdn_defined
+    - ansible_hostname != hostname_short
+
+- name: Load facts again (__hostname_fqdn_defined is true)
+  setup:
+  when:
+    - __hostname_fqdn_defined
+    - ansible_hostname != hostname_fqdn
+
+- name: Assert ansible_hostname has been updated to hostname_short
+  assert:
+    msg: "ansible_hostname, `{{ ansible_hostname }}`, is not identical with hostname_short, `{{ hostname_short }}`, after executing the role. this should not happen and probably is a bug in the role"
+    that:
+      - ansible_hostname == hostname_short
+  when: not ansible_check_mode

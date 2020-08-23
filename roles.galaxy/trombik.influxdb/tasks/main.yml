@@ -1,0 +1,133 @@
+---
+# tasks file for ansible-role-influxdb
+
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- include: "install-{{ ansible_os_family }}.yml"
+
+- name: Include trombik.x509_certificate
+  include_role:
+    name: trombik.x509_certificate
+  when:
+    - influxdb_include_x509_certificate
+
+- name: Create influxdb_db_dir directory
+  file:
+    path: "{{ influxdb_db_dir }}"
+    mode: 0755
+    owner: "{{ influxdb_user }}"
+    group: "{{ influxdb_group }}"
+    state: directory
+  register: __register_create_influxdb_db_dir
+  notify: Restart influxdb
+
+- name: Create influxdb_log_dir directory
+  file:
+    path: "{{ influxdb_log_dir }}"
+    mode: 0750
+    owner: "{{ influxdb_user }}"
+    group: "{{ influxdb_group }}"
+    state: directory
+  notify: Restart influxdb
+
+- name: Create influxdb.conf
+  template:
+    src: influxd.conf.j2
+    dest: "{{ influxdb_conf_file }}"
+    validate: echo %s
+  register: __register_create_influxdb_conf
+  notify: Restart influxdb
+
+- name: Start influxdb
+  service:
+    name: "{{ influxdb_service }}"
+    state: started
+  register: __register_start_influxdb
+
+- name: Wait for influxdb after `Start influxdb`
+  wait_for:
+    host: "{{ influxdb_bind_address.split(':')[0] }}"
+    port: "{{ influxdb_bind_address.split(':')[1] }}"
+    delay: 5
+    sleep: 1
+    state: started
+  when:
+    - __register_start_influxdb.changed
+
+- name: Restart influxdb before creating databases
+  # XXX ensure influxd has been restarted before creating databases
+  # this task may be removed when flush_handlers gets new `filter`
+  # https://github.com/ansible/ansible/pull/25573
+  service:
+    name: "{{ influxdb_service }}"
+    state: restarted
+  register: __register_restart_influxdb
+  when:
+    - (__register_create_influxdb_db_dir.changed or __register_create_influxdb_conf.changed) or (ansible_os_family == 'FreeBSD' and __create_etc_rc_conf_d_influxd.changed)
+
+- name: Wait for influxdb after restart
+  wait_for:
+    host: "{{ influxdb_bind_address.split(':')[0] }}"
+    port: "{{ influxdb_bind_address.split(':')[1] }}"
+    delay: 5
+    sleep: 1
+    state: started
+  when:
+    - __register_restart_influxdb.changed
+
+- name: See if admin user has been created
+  # https://docs.influxdata.com/influxdb/v1.7/administration/authentication_and_authorization/
+  # says:
+  #
+  # Note: If you enable authentication and have no users, InfluxDB will not
+  # enforce authentication and will only accept the query that creates a new
+  # admin user.
+  #
+  # and the error messages differ when no admin user exists, and when
+  # authentication failed.
+  command: "influx -host {{ influxdb_bind_address.split(':')[0] }} -port {{ influxdb_bind_address.split(':')[1] }} {% if influxdb_tls %}-ssl{% endif %} {% if not influxdb_tls_validate_certs %}-unsafeSsl{% endif %} -execute 'SHOW USERS'"
+  register: __register_influxdb_show_users
+  failed_when: false
+  changed_when: false
+
+- name: Create influxdb_admin_username
+  command: "influx -host {{ influxdb_bind_address.split(':')[0] }} -port {{ influxdb_bind_address.split(':')[1] }} {% if influxdb_tls %}-ssl{% endif %} {% if not influxdb_tls_validate_certs %}-unsafeSsl{% endif %} -execute \"CREATE USER {{ influxdb_admin_username }} WITH PASSWORD '{{ influxdb_admin_password }}' WITH ALL PRIVILEGES\""
+  when:
+    - __register_influxdb_show_users.stdout is search('create admin user first or disable authentication')
+
+- name: Create or delete databases
+  influxdb_database:
+    database_name: "{{ item.database_name }}"
+    hostname: "{{ item.hostname | default(influxdb_bind_address.split(':')[0]) }}"
+    login_password: "{{ item.password | default(influxdb_admin_password) }}"
+    port: "{{ item.port | default(influxdb_bind_address.split(':')[1]) }}"
+    proxies: "{{ item.proxies | default(omit) }}"
+    retries: "{{ item.retries | default(omit) }}"
+    ssl: "{{ item.ssl | default(influxdb_tls) }}"
+    state: "{{ item.state }}"
+    timeout: "{{ item.timeout | default(omit) }}"
+    udp_port: "{{ item.udp_port | default(omit) }}"
+    use_udp: "{{ item.use_udp | default(omit) }}"
+    login_username: "{{ item.username | default(influxdb_admin_username) }}"
+    validate_certs: "{{ item.validate_certs | default(influxdb_tls_validate_certs) }}"
+  with_items: "{{ influxdb_databases }}"
+
+- name: Create or delete users
+  influxdb_user_with_grants:
+    admin: "{{ item.admin | default(omit) }}"
+    state: "{{ item.state | default('present')}}"
+    user_name: "{{ item.user_name }}"
+    user_password: "{{ item.user_password | default(omit) }}"
+    login_username: "{{ item.login_username | default(influxdb_admin_username) }}"
+    login_password: "{{ item.password | default(influxdb_admin_password) }}"
+    hostname: "{{ item.hostname | default(influxdb_bind_address.split(':')[0]) }}"
+    port: "{{ item.port | default(influxdb_bind_address.split(':')[1]) }}"
+    proxies: "{{ item.proxies | default(omit) }}"
+    retries: "{{ item.retries | default(omit) }}"
+    ssl: "{{ item.ssl | default(influxdb_tls) }}"
+    timeout: "{{ item.timeout | default(omit) }}"
+    udp_port: "{{ item.udp_port | default(omit) }}"
+    use_udp: "{{ item.use_udp | default(omit) }}"
+    validate_certs: "{{ item.validate_certs | default(influxdb_tls_validate_certs) }}"
+    grants: "{{ item.grants | default(omit) }}"
+  with_items: "{{ influxdb_users }}"

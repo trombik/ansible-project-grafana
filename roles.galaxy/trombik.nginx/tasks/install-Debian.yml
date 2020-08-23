@@ -1,0 +1,26 @@
+---
+
+- name: Install nginx_extra_packages
+  apt:
+    name: "{{ nginx_extra_packages }}"
+    state: present
+
+- name: install nginx
+  apt:
+    name: "{{ nginx_package }}"
+    state: present
+
+- name: Install nginx
+  apt:
+    name: "{{ nginx_package }}"
+    state: present
+
+- name: Install passlib for htpasswd management
+  apt:
+    name: "{{ nginx_passlib_package }}"
+    state: present
+
+- name: Enable nginx_service
+  service:
+    name: "{{ nginx_service }}"
+    enabled: yes

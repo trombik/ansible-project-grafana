@@ -1,0 +1,9 @@
+---
+
+- name: Update hostname in rc.conf(5)
+  lineinfile:
+    dest: /etc/rc.conf
+    line: "hostname=\"{% if __hostname_fqdn_defined %}{{ hostname_fqdn }}{% else %}{{ hostname_short }}{% endif %}\""
+    regexp: "^hostname="
+    state: present
+    validate: sh -n %s

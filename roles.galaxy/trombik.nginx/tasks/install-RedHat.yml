@@ -1,0 +1,21 @@
+---
+
+- name: Install nginx_extra_packages
+  yum:
+    name: "{{ nginx_extra_packages }}"
+    state: present
+
+- name: Install nginx
+  yum:
+    name: "{{ nginx_package }}"
+    state: present
+
+- name: Install passlib for htpasswd management
+  yum:
+    name: "{{ nginx_passlib_package }}"
+    state: present
+
+- name: Enable nginx_service
+  service:
+    name: "{{ nginx_service }}"
+    enabled: yes

@@ -1,0 +1,18 @@
+---
+
+- name: Install grafana
+  openbsd_pkg:
+    name: "{{ grafana_package }}"
+    state: present
+
+- name: Install grafana_extra_packages
+  openbsd_pkg:
+    name: "{{ item.name }}"
+    state: "{{ item.state | default(omit) }}"
+  with_items: "{{ grafana_extra_packages }}"
+
+- name: Eanble grafana
+  service:
+    name: "{{ grafana_service }}"
+    enabled: yes
+    arguments: "{{ grafana_flags }}"

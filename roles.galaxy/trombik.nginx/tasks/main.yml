@@ -1,0 +1,94 @@
+---
+# tasks file for ansible-role-nginx
+
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- include: "install-{{ ansible_os_family }}.yml"
+
+- include: "x509.yml"
+  when:
+    - nginx_include_x509_certificate
+
+- include: "configure-{{ ansible_os_family }}.yml"
+
+- name: Create or remove nginx_htpasswd_users
+  htpasswd:
+    path: "{{ item.path }}"
+    owner: "{{ item.owner | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    create: "{{ item.create | default(omit) }}"
+    mode: "{{ item.mode | default(omit) }}"
+    name: "{{ item.name }}"
+    password: "{{ item.password | default(omit) }}"
+    state: "{{ item.state }}"
+    attributes: "{{ item.attributes | default(omit) }}"
+    crypt_scheme: "{{ item.crypt_scheme | default(omit) }}"
+    selevel: "{{ item.selevel | default(omit) }}"
+    serole: "{{ item.serole | default(omit) }}"
+    setype: "{{ item.setype | default(omit) }}"
+    seuser: "{{ item.seuser | default(omit) }}"
+    unsafe_writes: "{{ item.unsafe_writes | default(omit) }}"
+  with_items: "{{ nginx_htpasswd_users }}"
+
+- name: Create log directory
+  file:
+    path: "{{ nginx_log_dir }}"
+    mode: 0755
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    state: directory
+  notify: Restart nginx
+
+- name: Create nginx_conf_dir
+  file:
+    path: "{{ nginx_conf_dir }}"
+    state: directory
+
+- name: Create nginx_conf_fragments_dir
+  file:
+    path: "{{ nginx_conf_fragments_dir }}"
+    state: directory
+
+- name: Assert that nginx_config_fragments is valid
+  assert:
+    that:
+      - "'name' in item"
+      - item.name | length > 0
+      - "'config' in item"
+      - "'state' in item"
+      - "item.state == 'present' or item.state == 'absent'"
+  with_items: "{{ nginx_config_fragments }}"
+
+- name: Create nginx_conf_fragments
+  template:
+    src: fragment.j2
+    dest: "{{ nginx_conf_fragments_dir }}/{{ item.name }}"
+    # XXX you cannot validate each fragment
+    # validate: echo %s
+  with_items: "{{ nginx_config_fragments }}"
+  when:
+    - '"state" in item'
+    - "item.state == 'present'"
+  notify: Restart nginx
+
+- name: Remove nginx_conf_fragments
+  file:
+    path: "{{ nginx_conf_fragments_dir }}/{{ item.name }}"
+    state: absent
+  with_items: "{{ nginx_config_fragments }}"
+  when:
+    - '"state" in item'
+    - "item.state == 'absent'"
+  notify: Restart nginx
+
+- name: Create nginx.conf
+  template:
+    src: nginx.conf.j2
+    dest: "{{ nginx_conf_file }}"
+    validate: "{% if nginx_validate_enable %}nginx -c %s -t{% endif %}"
+  notify: Restart nginx
+
+- name: Start nginx
+  service:
+    name: "{{ nginx_service }}"
+    state: started

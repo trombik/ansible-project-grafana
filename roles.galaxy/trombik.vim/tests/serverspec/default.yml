@@ -1,0 +1,17 @@
+---
+- hosts: localhost
+  roles:
+    - ansible-role-vim
+  vars:
+    # XXX shells/tcshrc is NOT related to vim at all but is included in
+    # vim_additional_packages just for testing purpose
+    os_vim_additional_packages:
+      FreeBSD:
+        - shells/tcshrc
+      OpenBSD:
+        - vim-spell-uk
+      Debian:
+        - vim-scripts
+      RedHat:
+        - protobuf-vim
+    vim_additional_packages: "{{ os_vim_additional_packages[ansible_os_family] }}"

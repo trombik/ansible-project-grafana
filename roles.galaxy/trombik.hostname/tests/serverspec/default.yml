@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  roles:
+    - trombik.hosts
+    - ansible-role-hostname
+  vars:
+    fqdn: fqdn.example.org
+    hostname_short: "{{ fqdn.split('.') | first }}"
+    hosts_extra_localhosts:
+      - "{{ fqdn }}"
+      - "{{ hostname_short }}"
