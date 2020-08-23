@@ -20,4 +20,5 @@
     - role: trombik.influxdb
     - role: trombik.grafana
     - role: trombik.nginx
+    - role: trombik.monit
   vars:

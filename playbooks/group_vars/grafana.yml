@@ -1,5 +1,6 @@
 ---
 project_influx_service_fqdn: influx.i.trombik.org
+
 # _______________________________________________grafana
 project_grafana_port: 3000
 apt_repo_keys_to_add:
@@ -158,3 +159,58 @@ influxdb_config: |
   [[opentsdb]]
   [[udp]]
   [tls]
+
+# _______________________________________________monit
+monit_config: |
+  set daemon 10
+    with start delay {{ project_monit_start_delay }}
+  set httpd port 2812
+    use address 127.0.0.1
+    allow 127.0.0.1
+  set logfile syslog facility log_daemon
+
+monit_conf_extra_include_directories: []
+os_ssh_rc_command:
+  FreeBSD:
+    start: /usr/sbin/service sshd start
+    stop: /usr/sbin/service sshd stop
+  OpenBSD:
+    start: /usr/sbin/rcctl start sshd
+    stop: /usr/sbin/rcctl stop sshd
+  Debian:
+    start: /usr/sbin/service ssh start
+    stop: /usr/sbin/service ssh stop
+  RedHat:
+    start: /bin/systemctl start sshd
+    stop: /bin/systemctl stop sshd
+monit_scripts: []
+monit_rc:
+  sshd:
+    state: present
+    content: |
+      check process sshd with pidfile /var/run/sshd.pid
+        start program = "/usr/sbin/rcctl start sshd"
+        stop program = "/usr/sbin/rcctl stop sshd"
+        every 2 cycles
+        if failed port 22 protocol ssh then restart
+  nginx:
+    state: present
+    content: |
+      check process nginx with pidfile /var/run/nginx.pid
+      start program = "/usr/sbin/rcctl start nginx"
+      stop program = "/usr/sbin/rcctl stop nginx"
+      if failed host {{ project_ingress_address }} port 80 protocol http for 3 cycles then restart
+  grafana:
+    state: present
+    content: |
+      check process grafana matching grafana-server
+      start program = "/usr/sbin/rcctl start grafana"
+      stop program = "/usr/sbin/rcctl stop grafana"
+      if failed host 127.0.0.1 port 3000 protocol http for 3 cycles then restart
+  influxdb:
+    state: present
+    content: |
+      check process influxdb matching influxd
+      start program = "/usr/sbin/rcctl start influxdb"
+      stop program = "/usr/sbin/rcctl stop influxdb"
+      if failed host {{ influxdb_bind_address.split(":") | first }} port {{ influxdb_bind_address.split(":") | last }} protocol http for 3 cycles then restart
