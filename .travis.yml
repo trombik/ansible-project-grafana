@@ -11,12 +11,12 @@ cache:
   pip: true
 
 addons:
-  chrome: stable
   apt:
     update: true
     packages:
       - python-pip
       - curl
+      - chromium-chromedriver
 
       # for aspell
       - aspell
