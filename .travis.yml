@@ -11,6 +11,7 @@ cache:
   pip: true
 
 addons:
+  chrome: stable
   apt:
     update: true
     packages:
