@@ -16,6 +16,7 @@
     - role: trombik.zsh
     - role: trombik.git
     - role: trombik.sudo
+    - role: trombik.user
     - role: trombik.influxdb
     - role: trombik.grafana
     - role: trombik.nginx

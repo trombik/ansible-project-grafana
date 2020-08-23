@@ -4,3 +4,43 @@ sudo_sudoer: |
   %wheel	ALL=(ALL) ALL
   %sudo	ALL=(ALL:ALL) ALL
   #includedir {{ sudo_confd_dir }}
+
+project_default_group:
+  FreeBSD: wheel
+  OpenBSD: wheel
+  Debian: users
+  RedHat: users
+project_default_groups:
+  FreeBSD:
+    - dialer
+    - operator
+  OpenBSD:
+    - dialer
+    - operator
+  Debian:
+    - dialout
+    - sudo
+  RedHat:
+    - dialout
+    - sudo
+
+user_users:
+  - name: trombik
+    arg:
+      comment: Tomoyuki Sakurai
+      group: "{{ project_default_group[ansible_os_family] }}"
+      groups: "{{ project_default_groups[ansible_os_family] }}"
+      shell: /bin/sh
+    github:
+      user: trombik
+    sshrc: |
+      # see sshd(8)
+      if read proto cookie && [ -n "$DISPLAY" ]; then
+        if [ `echo $DISPLAY | cut -c1-10` = 'localhost:' ]; then
+          # X11UseLocalhost=yes
+          echo add unix:`echo $DISPLAY | cut -c11-` $proto $cookie
+        else
+          # X11UseLocalhost=no
+          echo add $DISPLAY $proto $cookie
+        fi | xauth -q -
+      fi

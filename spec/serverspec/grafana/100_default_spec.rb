@@ -7,6 +7,19 @@ services = %w[
   influxdb
 ]
 
+default_group = case os[:family]
+                when /bsd/
+                  "wheel"
+                else
+                  "users"
+                end
+default_groups = case os[:family]
+                 when /bsd/
+                   %w[dialer operator]
+                 else
+                   %w[dialout sudo]
+                 end
+
 context "after provision finishes" do
   it_behaves_like "a host with a valid hostname"
   it_behaves_like "a host with all basic tools installed"
@@ -29,4 +42,12 @@ describe command "influx -host #{Shellwords.escape(host)} -port " \
   "#{Shellwords.escape(password)} -database sensors -execute 'show measurements'" do
   its(:exit_status) { should eq 0 }
   its(:stderr) { should eq "" }
+end
+
+describe user "trombik" do
+  it { should exist }
+  it { should belong_to_primary_group default_group }
+  default_groups.each do |g|
+    it { should belong_to_group g }
+  end
 end
