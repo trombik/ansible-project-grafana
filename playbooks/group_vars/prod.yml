@@ -2,3 +2,5 @@
 hostname_fqdn: "{% if ansible_os_family == 'Debian' %}{{ inventory_hostname.split('.') | first }}{% else %}{{ inventory_hostname }}{% endif %}"
 
 project_ingress_address: "{{ ansible_default_ipv4['address'] }}"
+
+project_monit_start_delay: 30
