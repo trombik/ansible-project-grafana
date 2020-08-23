@@ -13,7 +13,7 @@ Capybara.configure do |config|
   when "virtualbox"
     config.app_host = "http://172.16.100.200"
   when "prod"
-    config.app_host = "http://grafana.i.trombik.org"
+    config.app_host = "http://grafana1.i.trombik.org"
   end
 end
 
