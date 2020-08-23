@@ -1,0 +1,14 @@
+---
+
+- name: Get HOME
+  getent:
+    database: passwd
+    key: "{{ item['arg']['name'] | default(item['name']) }}"
+
+- name: Create HOME/.ssh
+  file:
+    path: "{{ getent_passwd[item['arg']['name'] | default(item['name'])][4] }}/.ssh"
+    owner: "{{ item['arg']['name'] | default(item['name']) }}"
+    group: "{{ getent_passwd[item['arg']['name'] | default(item['name'])][2] }}"
+    mode: "0700"
+    state: directory

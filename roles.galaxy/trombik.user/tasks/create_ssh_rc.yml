@@ -1,0 +1,15 @@
+---
+
+- name: Get HOME
+  getent:
+    database: passwd
+    key: "{{ item['arg']['name'] | default(item['name']) }}"
+
+- name: Create HOME/.ssh
+  template:
+    src: sshrc.j2
+    dest: "{{ getent_passwd[item['arg']['name'] | default(item['name'])][4] }}/.ssh/rc"
+    owner: "{{ item['arg']['name'] | default(item['name']) }}"
+    group: "{{ getent_passwd[item['arg']['name'] | default(item['name'])][2] }}"
+    mode: "0600"
+    validate: sh -n %s

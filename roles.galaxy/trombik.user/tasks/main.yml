@@ -1,0 +1,72 @@
+---
+# tasks file for ansible-role-user
+
+- name: "Include OS-specific variables from {{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: "Include install-{{ ansible_os_family }}.yml"
+  include: "install-{{ ansible_os_family }}.yml"
+
+- name: Create or remove users
+  user:
+    append: "{{ item['arg']['append'] | default(omit) }}"
+    authorization: "{{ item['arg']['authorization'] | default(omit) }}"
+    comment: "{{ item['arg']['comment'] | default(omit) }}"
+    create_home: "{{ item['arg']['create_home'] | default(omit) }}"
+    expires: "{{ item['arg']['expires'] | default(omit) }}"
+    force: "{{ item['arg']['force'] | default(omit) }}"
+    generate_ssh_key: "{{ item['arg']['generate_ssh_key'] | default(omit) }}"
+    group: "{{ item['arg']['group'] | default(omit) }}"
+    groups: "{{ item['arg']['groups'] | default(omit) }}"
+    hidden: "{{ item['arg']['hidden'] | default(omit) }}"
+    home: "{{ item['arg']['home'] | default(omit) }}"
+    local: "{{ item['arg']['local'] | default(omit) }}"
+    login_class: "{{ item['arg']['login_class'] | default(omit) }}"
+    move_home: "{{ item['arg']['move_home'] | default(omit) }}"
+    name: "{{ item['arg']['name'] | default(item['name']) }}"
+    non_unique: "{{ item['arg']['non_unique'] | default(omit) }}"
+    password: "{{ item['arg']['password'] | default(omit) }}"
+    password_lock: "{{ item['arg']['password_lock'] | default(omit) }}"
+    profile: "{{ item['arg']['profile'] | default(omit) }}"
+    remove: "{{ item['arg']['remove'] | default(omit) }}"
+    role: "{{ item['arg']['role'] | default(omit) }}"
+    seuser: "{{ item['arg']['seuser'] | default(omit) }}"
+    shell: "{{ item['arg']['shell'] | default(omit) }}"
+    skeleton: "{{ item['arg']['skeleton'] | default(omit) }}"
+    ssh_key_bits: "{{ item['arg']['ssh_key_bits'] | default(omit) }}"
+    ssh_key_comment: "{{ item['arg']['ssh_key_comment'] | default(omit) }}"
+    ssh_key_file: "{{ item['arg']['ssh_key_file'] | default(omit) }}"
+    ssh_key_passphrase: "{{ item['arg']['ssh_key_passphrase'] | default(omit) }}"
+    ssh_key_type: "{{ item['arg']['ssh_key_type'] | default(omit) }}"
+    state: "{{ item['arg']['state'] | default(omit) }}"
+    system: "{{ item['arg']['system'] | default(omit) }}"
+    uid: "{{ item['arg']['uid'] | default(omit) }}"
+    update_password: "{{ item['arg']['update_password'] | default(omit) }}"
+  with_items: "{{ user_users }}"
+
+- name: Create .ssh
+  # XXX use include_tasks instead of block here because `block` cannot be used
+  # with `loop` or `with_items`.
+  include_tasks: create_ssh_dir.yml
+  with_items: "{{ user_users }}"
+  when:
+    - "not 'state' in item['arg'] or item['arg']['state'] == 'present'"
+    - "not 'create_home' in item['arg'] or not item['arg']['create_home']"
+
+- name: Add ssh key from GitHub to .ssh/authorized_keys
+  authorized_key:
+    user: "{{ item['arg']['name'] | default(item['name']) }}"
+    key: "https://github.com/{{ item['github']['user'] }}.keys"
+  with_items: "{{ user_users }}"
+  when:
+    - "'github' in item"
+
+- name: Create .ssh/rc
+  # XXX use include_tasks instead of block here because `block` cannot be used
+  # with `loop` or `with_items`.
+  include_tasks: create_ssh_rc.yml
+  with_items: "{{ user_users }}"
+  when:
+    - "'sshrc' in item"
+    - "not 'state' in item['arg'] or item['arg']['state'] == 'present'"
+    - "not 'create_home' in item['arg'] or not item['arg']['create_home']"
