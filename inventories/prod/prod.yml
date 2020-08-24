@@ -1,12 +1,12 @@
 ---
 all:
   hosts:
-    grafana1.i.trombik.org:
-      ansible_host: grafana1.i.trombik.org
+    nex1.i.trombik.org:
+      ansible_host: nex1.i.trombik.org
   children:
     grafana:
       hosts:
-        grafana1.i.trombik.org:
+        nex1.i.trombik.org:
     prod-credentials:
       children:
         grafana:
