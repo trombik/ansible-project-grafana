@@ -119,7 +119,7 @@ namespace :test do
       end
     end
     group_directories = Dir.glob("spec/serverspec/*").select { |d| File.directory?(d) }
-    groups = group_directories.map { |d| d.split("/").last }.select { |d| d != "shared_examples" }
+    groups = group_directories.map { |d| d.split("/").last }.reject { |d| d == "shared_examples" }
     groups.each do |g|
       desc "Run serverspec for group `#{g}`"
       task g do |_t|
