@@ -5,9 +5,11 @@ project_influx_service_fqdn: influx.i.trombik.org
 project_grafana_port: 3000
 apt_repo_keys_to_add:
   - https://packages.grafana.com/gpg.key
+  - https://repos.influxdata.com/influxdb.key
 apt_repo_enable_apt_transport_https: yes
 apt_repo_to_add:
   - "deb https://packages.grafana.com/oss/deb stable main"
+  - "deb https://repos.influxdata.com/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
 redhat_repo:
   grafana:
     baseurl: https://packages.grafana.com/oss/rpm
@@ -74,6 +76,41 @@ grafana_config: |
   [external_image_storage.gcs]
   [external_image_storage.azure_blob]
   [external_image_storage.local]
+
+# _______________________________________________telgraf
+telegraf_config: |
+  [global_tags]
+  [agent]
+    interval = "10s"
+    round_interval = true
+    metric_batch_size = 1000
+    metric_buffer_limit = 10000
+    collection_jitter = "0s"
+    flush_interval = "10s"
+    flush_jitter = "0s"
+    precision = ""
+    debug = false
+    quiet = false
+    logfile = "{{ telegraf_log_dir }}/telegraf.log"
+    hostname = "{{ ansible_hostname }}"
+    omit_hostname = false
+  [[inputs.mqtt_consumer]]
+    servers = ["tcp://{{ project_mqtt_host }}:1883"]
+    username = "{{ project_mqtt_user }}"
+    password = "{{ project_mqtt_password }}"
+    topics = [
+      "homie/+/icmp/influx",
+    ]
+    persistent_session = false
+    qos = 1
+    client_id = "telegraf"
+    data_format = "influx"
+  [[outputs.influxdb]]
+    urls = ["http://{{ project_influxdb_host }}:8086"]
+    database = "sensors"
+    username = "{{ project_telegraf_influxdb_user }}"
+    password = "{{ project_telegraf_influxdb_password }}"
+    skip_database_creation = true
 
 # _______________________________________________nginx
 os_project_www_root_dir:

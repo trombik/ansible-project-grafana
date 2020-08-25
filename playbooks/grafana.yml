@@ -19,6 +19,7 @@
     - role: trombik.user
     - role: trombik.influxdb
     - role: trombik.grafana
+    - role: trombik.telegraf
     - role: trombik.nginx
     - role: trombik.monit
   vars:
