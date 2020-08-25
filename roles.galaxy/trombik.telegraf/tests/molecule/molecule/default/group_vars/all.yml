@@ -1,0 +1,78 @@
+---
+project_influxdb_address: "{% if ansible_virtualization_type == 'docker' %}server1{% else %}192.168.21.200{% endif %}"
+project_influxdb_port: 8086
+
+os_project_telegraf_listener_address:
+  FreeBSD: "{{ ansible_em1['ipv4'][0]['address'] | default(omit) }}"
+  Debian: "{{ ansible_eth1['ipv4']['address'] | default(omit) }}"
+project_telegraf_listener_address: "{{ os_project_telegraf_listener_address[ansible_os_family] }}"
+project_telegraf_listener_port: 8094
+
+freebsd_pkg_repo:
+  FreeBSD_latest:
+    enabled: "true"
+    state: present
+    # use a mirror in Asia
+    url: pkg+http://pkg0.twn.freebsd.org/${ABI}/latest
+    mirror_type: srv
+    signature_type: fingerprints
+    fingerprints: /usr/share/keys/pkg
+    priority: 100
+apt_repo_keys_to_add:
+  - https://repos.influxdata.com/influxdb.key
+  - https://packages.grafana.com/gpg.key
+apt_repo_to_add:
+  - "deb https://repos.influxdata.com/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+  - "deb https://packages.grafana.com/oss/deb stable main"
+apt_repo_enable_apt_transport_https: yes
+
+# __________________________________________telegraf
+os_telegraf_flags:
+  FreeBSD: |
+    telegraf_flags="-debug"
+  Debian: |
+    TELEGRAF_OPTS="-debug"
+  OpenBSD: -debug
+telegraf_flags: "{{ os_telegraf_flags[ansible_os_family] }}"
+telegraf_config: |
+  [global_tags]
+  [agent]
+    interval = "10s"
+    round_interval = true
+    metric_batch_size = 1000
+    metric_buffer_limit = 10000
+    collection_jitter = "0s"
+    flush_interval = "10s"
+    flush_jitter = "0s"
+    precision = ""
+    debug = false
+    quiet = false
+    logfile = "{{ telegraf_log_dir }}/telegraf.log"
+    hostname = "{{ ansible_hostname }}"
+    omit_hostname = false
+  [[inputs.cpu]]
+    percpu = true
+    totalcpu = true
+    collect_cpu_time = false
+    report_active = false
+  [[inputs.disk]]
+    ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
+  [[inputs.diskio]]
+  [[inputs.kernel]]
+  [[inputs.mem]]
+  [[inputs.processes]]
+  [[inputs.socket_listener]]
+    service_address = "tcp://{{ project_telegraf_listener_address }}:{{ project_telegraf_listener_port }}"
+    data_format = "influx"
+
+  # broken at the moment. https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=240570
+  # [[inputs.swap]]
+  #
+  # does not work on OpenBSD
+  # [[inputs.system]]
+  [[outputs.influxdb]]
+    urls = ["http://{{ project_influxdb_address }}:{{ project_influxdb_port }}"]
+    database = "mydatabase"
+    username = "write_only"
+    password = "write_only"
+    skip_database_creation = true

@@ -1,0 +1,12 @@
+---
+telegraf_user: "{{ __telegraf_user }}"
+telegraf_group: "{{ __telegraf_group }}"
+telegraf_package: "{{ __telegraf_package }}"
+telegraf_extra_packages: []
+telegraf_log_dir: "{{ __telegraf_log_dir }}"
+telegraf_db_dir: "{{ __telegraf_db_dir }}"
+telegraf_service: "{{ __telegraf_service }}"
+telegraf_conf_dir: "{{ __telegraf_conf_dir }}"
+telegraf_conf_file: "{{ __telegraf_conf_dir }}/telegraf.conf"
+telegraf_config: ""
+telegraf_flags: ""

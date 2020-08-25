@@ -1,0 +1,6 @@
+---
+
+docker_package_ping: iputils
+docker_package_mail: mailx
+docker_package_ss: iproute
+docker_service_rsyslog: rsyslog

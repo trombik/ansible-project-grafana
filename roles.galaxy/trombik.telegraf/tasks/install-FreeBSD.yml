@@ -1,0 +1,31 @@
+---
+
+- name: Install telegraf_extra_packages
+  pkgng:
+    name: "{{ telegraf_extra_packages }}"
+    state: present
+
+- name: Install telegraf
+  pkgng:
+    name: "{{ telegraf_package }}"
+    state: present
+  notify:
+    - Restart telegraf
+
+- name: Patch rc.d/telegraf
+  patch:
+    src: patch-telegraf
+    dest: /usr/local/etc/rc.d/telegraf
+
+- name: Create /etc/rc.conf.d/telegraf
+  template:
+    src: FreeBSD.rcd.j2
+    dest: "/etc/rc.conf.d/{{ telegraf_service }}"
+    validate: sh -n %s
+  notify:
+    - Restart telegraf
+
+- name: Enable telegraf
+  service:
+    name: "{{ telegraf_service }}"
+    enabled: yes

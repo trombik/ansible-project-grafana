@@ -1,0 +1,11 @@
+--- telegraf.orig	2019-09-14 07:36:28.711600000 +0000
++++ telegraf	2019-09-14 07:35:46.343815000 +0000
+@@ -51,7 +51,7 @@
+ {
+     echo "Starting ${name}"
+     /usr/sbin/daemon -cr -P ${pidfile} -u ${telegraf_user} \
+-        /usr/local/bin/${name} ${telegraf_options} >> ${logfile} 2>&1
++        /usr/local/bin/${name} ${telegraf_options}
+ }
+ 
+ telegraf_stop()
