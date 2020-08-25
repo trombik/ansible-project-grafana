@@ -33,7 +33,7 @@ grafana_config: |
   [paths]
   data = {{ grafana_db_dir }}
   logs = {{ grafana_log_dir }}
-  plugins = /var/db/grafana/plugins
+  plugins = {{ grafana_plugins_dir }}
   provisioning = {{ grafana_provisioning_dir }}
   [server]
   [database]
@@ -74,6 +74,10 @@ grafana_config: |
   [external_image_storage.gcs]
   [external_image_storage.azure_blob]
   [external_image_storage.local]
+
+grafana_plugins:
+  - name: agenty-flowcharting-panel
+    state: present
 # _______________________________________________nginx
 os_project_www_root_dir:
   OpenBSD: /var/www/htdocs
