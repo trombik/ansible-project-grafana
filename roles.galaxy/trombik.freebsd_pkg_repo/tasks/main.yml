@@ -1,0 +1,32 @@
+---
+# tasks file for ansible-role-freebsd_pkg_repo
+
+- name: Create repo directory
+  file:
+    path: "{{ freebsd_pkg_repo_dir }}"
+    state: directory
+    mode: 0755
+
+- name: Assert state field exists
+  assert:
+    that:
+      - item.value.state == 'present' or item.value.state == 'absent'
+  with_dict: "{{ freebsd_pkg_repo }}"
+
+- name: Create repository file
+  template:
+    src: repo.conf.j2
+    dest: "{{ freebsd_pkg_repo_dir }}/{{ item.key }}.conf"
+    mode: 0644
+    validate: pkg -vv --config %s | grep -E '^[[:space:]]+{{ item.key }}:[[:space:]]+{'
+  with_dict: "{{ freebsd_pkg_repo }}"
+  when:
+    - item.value.state == 'present'
+
+- name: Remove repository file
+  file:
+    path: "{{ freebsd_pkg_repo_dir }}/{{ item.key }}.conf"
+    state: absent
+  with_dict: "{{ freebsd_pkg_repo }}"
+  when:
+    - item.value.state == 'absent'

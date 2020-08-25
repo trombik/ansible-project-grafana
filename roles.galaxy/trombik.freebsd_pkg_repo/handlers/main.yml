@@ -1,0 +1,6 @@
+---
+
+- name: Restart freebsd_pkg_repo
+  service:
+    name: freebsd_pkg_repo
+    state: restarted

@@ -1,0 +1,5 @@
+---
+apt_repo_to_add: []
+apt_repo_keys_to_add: []
+apt_repo_enable_apt_transport_https: False
+apt_repo_required_packages: "{{ __apt_repo_required_packages }}"

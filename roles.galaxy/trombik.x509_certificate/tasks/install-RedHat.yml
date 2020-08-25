@@ -1,0 +1,11 @@
+---
+
+- name: Install x509_certificate_packages
+  yum:
+    name: "{{ x509_certificate_packages }}"
+    state: present
+
+- name: Install x509_certificate_additional_packages
+  yum:
+    name: "{{ x509_certificate_additional_packages }}"
+    state: present

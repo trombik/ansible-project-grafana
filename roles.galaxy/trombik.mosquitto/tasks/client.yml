@@ -1,0 +1,8 @@
+---
+- name: Ensure mosquitto server is disabled
+  service:
+    name: "{{ mosquitto_service }}"
+    enabled: false
+    state: stopped
+  when:
+    - ansible_os_family != "Debian"

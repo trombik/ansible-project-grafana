@@ -1,0 +1,6 @@
+---
+
+- name: Install freebsd_pkg_repo
+  pkgng:
+    name: freebsd_pkg_repo
+    state: present
