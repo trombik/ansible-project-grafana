@@ -1,3 +1,8 @@
+## Release 1.3.2
+
+* 00fc263 bugfix: update boxes, and a TLS test
+* e622f2f bugfix: update python 3.x
+
 ## Release 1.3.1
 
 * 619e0a1 bugfix: update gems, sync .travis.yml

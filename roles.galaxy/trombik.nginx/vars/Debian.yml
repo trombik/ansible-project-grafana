@@ -4,4 +4,4 @@ __nginx_group: www-data
 __nginx_package: nginx
 __nginx_log_dir: /var/log/nginx
 __nginx_conf_dir: /etc/nginx
-__nginx_passlib_package: python-passlib
+__nginx_passlib_package: python3-passlib

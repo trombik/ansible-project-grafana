@@ -123,7 +123,8 @@ ports.each do |p|
 end
 
 describe command("echo | openssl s_client -connect 127.0.0.1:443 -showcerts") do
-  if os[:family] == "freebsd"
+  case os[:family]
+  when "freebsd", "ubuntu"
     # newer openssl
     # issuer=C = AU, ST = Some-State, O = Internet Widgits Pty Ltd, CN = foo.example.org
     its(:stdout) { should match(/#{Regexp.escape("issuer=C = AU, ST = Some-State, O = Internet Widgits Pty Ltd, CN = foo.example.org")}/) }
