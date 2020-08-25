@@ -99,9 +99,9 @@ namespace :test do
   end
 
   namespace "serverspec" do
+    inventory = AnsibleInventory.new(inventory_path)
     desc "Run serverspec on all hosts"
     task "all" do
-      inventory = AnsibleInventory.new(inventory_path)
       ENV["ANSIBLE_VAULT_PASSWORD_FILE"] = vault_password_file
       inventory.all_groups.each do |g|
         next unless Dir.exist?("spec/serverspec/#{g}")
@@ -118,12 +118,11 @@ namespace :test do
         end
       end
     end
-    groups = Dir.glob("sepc/serverspec/*").select { |d| d != "shared_examples" && File.directory?(d) }
+    group_directories = Dir.glob("spec/serverspec/*").select { |d| File.directory?(d) }
+    groups = group_directories.map { |d| d.split("/").last }.select { |d| d != "shared_examples" }
     groups.each do |g|
-      next unless Dir.exist?("spec/serverspec/#{g}")
-
       desc "Run serverspec for group `#{g}`"
-      task g.to_sym do |_t|
+      task g do |_t|
         inventory.all_hosts_in(g).each do |h|
           configure_sudo_password_for(run_as_user)
           puts "running serverspec for #{g} on #{h} as user `#{run_as_user}`"
