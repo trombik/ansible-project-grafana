@@ -7,3 +7,6 @@ project_ingress_address: "{{ ansible_em1['ipv4'][0]['address'] }}"
 
 # use short delay in test environment
 project_monit_start_delay: 5
+
+project_mqtt_host: localhost
+project_influxdb_host: "{{ project_ingress_address }}"
