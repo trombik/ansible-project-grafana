@@ -3,4 +3,10 @@ hostname_fqdn: "{% if ansible_os_family == 'Debian' %}{{ inventory_hostname.spli
 
 project_ingress_address: "{{ ansible_default_ipv4['address'] }}"
 
+# use short delay in test environment
 project_monit_start_delay: 30
+
+project_mqtt_host: mqtt1.i.trombik.org
+project_influxdb_host: "{{ project_ingress_address }}"
+project_mosquitto_bind_address: "{{ project_ingress_address }}"
+project_influx_service_fqdn: grafana1.i.trombik.org

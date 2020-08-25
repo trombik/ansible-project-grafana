@@ -3,13 +3,20 @@ all:
   hosts:
     nex1.i.trombik.org:
       ansible_host: nex1.i.trombik.org
+    mqtt1.i.trombik.org:
+      ansible_host: mqtt1.i.trombik.org
   children:
     grafana:
       hosts:
         nex1.i.trombik.org:
+    mqtt:
+      hosts:
+        mqtt1.i.trombik.org:
     prod-credentials:
       children:
         grafana:
+        mqtt:
     prod:
       children:
         grafana:
+        mqtt:
