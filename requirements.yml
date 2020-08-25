@@ -12,3 +12,8 @@
 - name: trombik.nginx
 - name: trombik.monit
 - name: trombik.telegraf
+- name: trombik.freebsd_pkg_repo
+- name: trombik.apt_repo
+- name: trombik.mosquitto
+- name: trombik.tmux
+- name: trombik.x509_certificate

@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  roles:
+    - ansible-role-freebsd_pkg_repo
+  vars:
+    freebsd_pkg_repo:
+      # disable the default package repository
+      FreeBSD:
+        enabled: "false"
+        state: present
+      # enable newer package repository
+      FreeBSD_latest:
+        enabled: "true"
+        state: present
+        url: pkg+https://pkg.FreeBSD.org/${ABI}/latest
+        mirror_type: srv
+        signature_type: fingerprints
+        fingerprints: /usr/share/keys/pkg
+        priority: 100

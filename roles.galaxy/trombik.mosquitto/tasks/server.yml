@@ -1,0 +1,81 @@
+---
+
+- name: Create log directory
+  file:
+    path: "{{ mosquitto_log_dir }}"
+    mode: 0755
+    owner: "{{ mosquitto_user }}"
+    group: "{{ mosquitto_group }}"
+    state: directory
+  notify: Restart mosquitto
+
+- name: Create db directory
+  file:
+    path: "{{ mosquitto_db_dir }}"
+    mode: 0755
+    owner: "{{ mosquitto_user }}"
+    group: "{{ mosquitto_group }}"
+    state: directory
+  notify: Restart mosquitto
+
+- name: Include x509_certificate
+  include_role:
+    name: trombik.x509_certificate
+  when:
+    - mosquitto_include_x509_certificate
+
+- name: Create mosquitto_acl_files
+  template:
+    owner: root
+    group: "{{ mosquitto_group }}"
+    src: acl.j2
+    mode: 0640
+    dest: "{{ item['path'] }}"
+  when:
+    - "item['state'] == 'present'"
+  with_items: "{{ mosquitto_acl_files }}"
+  notify: Reload mosquitto
+
+- name: Delete mosquitto_acl_files
+  file:
+    path: "{{ item['path'] }}"
+    state: "{{ item['state'] }}"
+  when:
+    - "item['state'] == 'absent'"
+  with_items: "{{ mosquitto_acl_files }}"
+  notify: Reload mosquitto
+
+- name: Create mosquitto_accounts
+  template:
+    src: passwd.j2
+    dest: "{{ mosquitto_accounts_file }}"
+    group: "{{ mosquitto_group }}"
+    mode: 0640
+  notify:
+    - Reload mosquitto
+
+- name: Create mosquitto.conf
+  template:
+    owner: root
+    group: "{{ mosquitto_group }}"
+    mode: 0640
+    src: mosquitto.conf.j2
+    dest: "{{ mosquitto_conf_file }}"
+  notify: Restart mosquitto
+
+- name: Start mosquitto
+  service:
+    name: "{{ mosquitto_service }}"
+    enabled: true
+    state: started
+  register: __mosquitto_service_start
+
+- name: Wait for mosquitto to listen in task
+  # XXX the server does not validate upon startup. even if the file is not
+  # correct, it returns zero exit status.
+  wait_for:
+    host: "{% if mosquitto_bind_address | length > 0 %}{{ mosquitto_bind_address }}{% else %}localhost{% endif %}"
+    port: "{{ mosquitto_port }}"
+    timeout: "{{ mosquitto_wait_for_timeout }}"
+  when:
+    - __mosquitto_service_start.changed

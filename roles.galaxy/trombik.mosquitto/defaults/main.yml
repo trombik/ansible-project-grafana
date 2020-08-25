@@ -1,0 +1,24 @@
+---
+
+mosquitto_user: "{{ __mosquitto_user }}"
+mosquitto_group: "{{ __mosquitto_group }}"
+mosquitto_log_dir: /var/log/mosquitto
+mosquitto_db_dir: "{{ __mosquitto_db_dir }}"
+mosquitto_service: mosquitto
+mosquitto_conf_dir: "{{ __mosquitto_conf_dir }}"
+mosquitto_conf_file: "{{ __mosquitto_conf_dir }}/mosquitto.conf"
+mosquitto_package: mosquitto
+mosquitto_pid_file: /var/run/mosquitto.pid
+mosquitto_flags: ""
+mosquitto_port: 1883
+mosquitto_bind_address: ""
+mosquitto_server: yes
+mosquitto_extra_packages: []
+mosquitto_wait_for_timeout: 30
+mosquitto_include_x509_certificate: no
+mosquitto_extra_groups: []
+mosquitto_acl_files: []
+mosquitto_accounts: []
+mosquitto_accounts_file: "{{ mosquitto_conf_dir }}/passwd"
+
+mosquitto_config: ""
