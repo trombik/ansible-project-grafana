@@ -1,0 +1,126 @@
+---
+freebsd_pkg_repo:
+  FreeBSD:
+    enabled: "false"
+    state: present
+  FreeBSD_latest:
+    enabled: "true"
+    state: present
+    url: pkg+https://pkg.FreeBSD.org/${ABI}/latest
+    signature_type: fingerprints
+    fingerprints: /usr/share/keys/pkg
+    mirror_type: srv
+apt_repo_enable_apt_transport_https: yes
+apt_repo_keys_to_add: []
+apt_repo_to_add:
+  - "ppa:mosquitto-dev/mosquitto-ppa"
+# ____________________ x509
+project_mqtt_ca_pub_file: "{{ mosquitto_conf_dir }}/certs/ca.pem"
+project_mqtt_tls_pub_file: "{{ mosquitto_conf_dir }}/certs/mosquitto.pub.pem"
+project_mqtt_tls_secret_file: "{{ mosquitto_conf_dir }}/certs/mosquitto.key.pem"
+
+x509_certificate:
+  - name: mqtt.i.trombik.org
+    state: present
+    public:
+      path: "{{ project_mqtt_tls_pub_file }}"
+      key: "{{ project_mqtt_tls_pub }}"
+      mode: "0644"
+    secret:
+      owner: "{{ mosquitto_user }}"
+      group: "{{ mosquitto_group }}"
+      path: "{{ project_mqtt_tls_secret_file }}"
+      key: "{{ project_mqtt_tls_secret }}"
+      mode: "0440"
+  - name: ca
+    state: present
+    public:
+      path: "{{ project_mqtt_ca_pub_file }}"
+      key: "{{ project_mqtt_ca_pub }}"
+
+# ____________________ mosquitto
+
+mosquitto_include_x509_certificate: yes
+mosquitto_bind_address: "{{ project_mosquitto_bind_address }}"
+mosquitto_port: 8883
+mosquitto_config: |
+  user {{ mosquitto_user }}
+  pid_file {{ mosquitto_pid_file }}
+  log_dest syslog
+  autosave_interval 1800
+  persistence true
+  persistence_location {{ mosquitto_db_dir }}/
+  persistence_file mosquitto.db
+  per_listener_settings false
+  allow_anonymous true
+  acl_file {{ mosquitto_conf_dir }}/mqtt.acl
+  password_file {{ mosquitto_accounts_file }}
+  sys_interval 2
+
+  # MQTT
+  listener 1883
+
+  # MQTT/TLS
+  listener 8883
+  cafile {{ project_mqtt_ca_pub_file }}
+  keyfile {{ project_mqtt_tls_secret_file }}
+  certfile {{ project_mqtt_tls_pub_file }}
+  tls_version tlsv1.2
+
+mosquitto_acl_files:
+  - name: my acl
+    path: "{{ mosquitto_conf_dir }}/mqtt.acl"
+    state: present
+    content: |
+      # allow anonymous users to read statistics
+      topic read $SYS/broker/load/#
+      topic read $SYS/broker/bytes/#
+      topic read $SYS/broker/clients/#
+      # %topic%: one of five topics as defined by commands Topic, GroupTopic, ButtonTopic, SwitchTopic and MqttClient
+      # %prefix%: cmnd, stat, and tele
+      # %hostname%: the hostname of the device as defined through the web UI (default = %s-%04d)
+      #
+      # tasmota/%hostname%/%topic%/%prefix%/
+      #
+      # XXX pattern applies to ALL users
+      pattern readwrite tasmota/%c/#
+      pattern readwrite homie/%c/#
+      # allow admin to everything
+      user admin
+      # XXX you cannot use '#' here. don't ask me why
+      topic readwrite $SYS/#
+      topic readwrite tasmota/#
+      topic readwrite homie/#
+
+      user readonly
+      topic read homie/#
+      topic read tasmota/#
+
+      user homie
+      topic readwrite homie/#
+mosquitto_accounts: "{{ project_mosquitto_accounts }}"
+
+# ____________________ monit
+monit_config: |
+  set daemon 10
+    with start delay 10
+  set httpd port 2812
+    use address 127.0.0.1
+    allow 127.0.0.1
+  set logfile syslog facility log_daemon
+
+os_mosquitto_service:
+  FreeBSD:
+    start: /usr/sbin/service mosquitto start
+    stop: /usr/sbin/service mosquitto stop
+  Debian:
+    start: /usr/sbin/service mosquitto start
+    stop: /usr/sbin/service mosquitto stop
+
+monit_rc:
+  mosquitto:
+    state: present
+    content: |
+      check process mosquitto matching "mosquitto"
+        start program "{{ os_mosquitto_service[ansible_os_family]['start'] }}"
+        stop program "{{ os_mosquitto_service[ansible_os_family]['stop'] }}"
