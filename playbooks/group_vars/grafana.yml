@@ -139,7 +139,7 @@ nginx_config: |
 
 # _______________________________________________influxdb
 
-influxdb_bind_address: 127.0.0.1:8086
+influxdb_bind_address: "{{ project_ingress_address }}:8086"
 influxdb_databases:
   - database_name: sensors
     state: present

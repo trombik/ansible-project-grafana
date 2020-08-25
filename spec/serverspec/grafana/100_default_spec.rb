@@ -34,8 +34,13 @@ end
 
 user = credentials_yaml["project_grafana_influxdb_user"]
 password = credentials_yaml["project_grafana_influxdb_password"]
-host = group_var("grafana.yml", "influxdb_bind_address").split(":").first
-port = group_var("grafana.yml", "influxdb_bind_address").split(":").last
+host = case test_environment
+       when "prod"
+         "nex1.i.trombik.org"
+       when "virtualbox"
+         "172.16.100.200"
+       end
+port = 8086
 
 describe command "influx -host #{Shellwords.escape(host)} -port " \
   "#{Shellwords.escape(port)} -username #{Shellwords.escape(user)} -password " \
