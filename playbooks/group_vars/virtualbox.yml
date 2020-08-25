@@ -1,12 +1,18 @@
 ---
 hostname_fqdn: "{{ inventory_hostname }}"
-hosts_map: "{
-  '{{ ansible_default_ipv4.address }}': ['{{ project_influx_service_fqdn }}']
-}"
-project_ingress_address: "{{ ansible_em1['ipv4'][0]['address'] }}"
+hosts_map:
+  172.16.100.201: ['mqtt1.trombik.org']
+  172.16.100.200: ['grafana1.i.trombik.org']
+
+hosts_enable_localhost: yes
+hosts_extra_localhosts:
+  - "{{ inventory_hostname }}"
+project_ingress_address: "{% if ansible_os_family == 'Debian' %}{{ ansible_eth1['ipv4']['address'] }}{% else %}{{ ansible_em1['ipv4'][0]['address'] }}{% endif %}"
 
 # use short delay in test environment
 project_monit_start_delay: 5
 
-project_mqtt_host: localhost
-project_influxdb_host: "{{ project_ingress_address }}"
+project_mqtt_host: mqtt1.trombik.org
+project_influxdb_host: grafana1.i.trombik.org
+project_mosquitto_bind_address: "{{ project_ingress_address }}"
+project_influx_service_fqdn: grafana1.i.trombik.org

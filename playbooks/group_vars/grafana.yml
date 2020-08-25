@@ -1,6 +1,4 @@
 ---
-project_influx_service_fqdn: influx.i.trombik.org
-
 # _______________________________________________grafana
 project_grafana_port: 3000
 apt_repo_keys_to_add:

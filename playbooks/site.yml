@@ -1,3 +1,4 @@
 ---
 
 - import_playbook: grafana.yml
+- import_playbook: mqtt.yml

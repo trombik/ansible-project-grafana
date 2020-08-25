@@ -1,0 +1,27 @@
+---
+- hosts: mqtt
+  become: yes
+  become_method: sudo
+  environment:
+    http_proxy: "{{ http_proxy | default() }}"
+    https_proxy: "{{ https_proxy | default() }}"
+    no_proxy: "{{ no_proxy | default() }}"
+
+  pre_tasks:
+    - debug: var=hostvars[inventory_hostname]
+  roles:
+    - role: trombik.hosts
+    - role: trombik.hostname
+    - role: trombik.freebsd_pkg_repo
+      when: ansible_os_family == 'FreeBSD'
+    - role: trombik.apt_repo
+      when: ansible_os_family == 'Debian'
+    - role: trombik.vim
+    - role: trombik.zsh
+    - role: trombik.git
+    - role: trombik.tmux
+    - role: trombik.sudo
+    - role: trombik.user
+    - role: trombik.mosquitto
+    - role: trombik.monit
+  vars:
