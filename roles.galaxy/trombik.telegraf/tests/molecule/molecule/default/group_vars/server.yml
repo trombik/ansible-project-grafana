@@ -1,0 +1,149 @@
+---
+
+# __________________________________________influxdb
+influxdb_admin_username: admin
+influxdb_admin_password: PassWord
+influxdb_tls: no
+
+project_infraxdb_rpc_port: 8088
+os_project_infraxdb_rpc_bind_address:
+  FreeBSD: "{{ ansible_em1['ipv4'][0]['address'] | default(omit) }}"
+  Debian: "{{ ansible_eth1['ipv4']['address'] | default(omit) }}"
+# XXX address
+project_infraxdb_rpc_bind_address: "{{ os_project_infraxdb_rpc_bind_address[ansible_os_family] }}"
+
+project_influxdb_bind_port: 8086
+os_influxdb_bind_address:
+  FreeBSD: "{{ ansible_em1['ipv4'][0]['address'] | default(omit) }}"
+  Debian: "{{ ansible_eth1['ipv4']['address'] | default(omit) }}"
+# XXX address:port
+influxdb_bind_address: "{{ os_influxdb_bind_address[ansible_os_family] }}:{{ project_influxdb_bind_port }}"
+
+influxdb_users:
+  - user_name: foo
+    user_password: PassWord
+    grants:
+      - database: mydatabase
+        privilege: ALL
+  - user_name: write_only
+    user_password: write_only
+    grants:
+      - database: mydatabase
+        privilege: WRITE
+  - user_name: read_only
+    user_password: read_only
+    grants:
+      - database: mydatabase
+        privilege: READ
+  - user_name: none
+    user_password: none
+  - user_name: bar
+    state: absent
+influxdb_databases:
+  - database_name: mydatabase
+    state: present
+
+influxdb_config: |
+  reporting-disabled = true
+  # this one is bind address for backup process
+  bind-address = "{{ project_infraxdb_rpc_bind_address }}:{{ project_infraxdb_rpc_port }}"
+  [meta]
+    dir = "{{ influxdb_db_dir }}/meta"
+  [data]
+    dir = "{{ influxdb_db_dir }}/data"
+    wal-dir = "{{ influxdb_db_dir }}/wal"
+  [coordinator]
+  [retention]
+  [shard-precreation]
+  [monitor]
+  [http]
+    auth-enabled = true
+    bind-address = "{{ influxdb_bind_address }}"
+    access-log-path = "{{ influxdb_log_dir }}/access.log"
+  [ifql]
+  [logging]
+  [subscriber]
+  [[graphite]]
+  [[collectd]]
+  [[opentsdb]]
+  [[udp]]
+  [tls]
+
+# __________________________________________grafana
+os_grafana_flags:
+  FreeBSD: |
+    grafana_conf={{ grafana_conf_file }}
+  Debian: ""
+
+grafana_flags: "{{ os_grafana_flags[ansible_os_family] }}"
+grafana_admin_user: admin
+grafana_admin_password: PassWord
+
+os_grafana_addr:
+  FreeBSD: "{{ ansible_em1['ipv4'][0]['address'] | default(omit) }}"
+  Debian: "{{ ansible_eth1['ipv4']['address'] | default(omit) }}"
+grafana_addr: "{{ os_grafana_addr[ansible_os_family] }}"
+grafana_provisioning_files:
+  - name: datasources/influxdb.yml
+    state: present
+    format: yaml
+    content:
+      apiVersion: 1
+      datasources:
+        - name: InfluxDB on localhost
+          type: influxdb
+          access: proxy
+          database: mydatabase
+          user: read_only
+          password: read_only
+          url: http://{{ influxdb_bind_address }}
+          jsonData:
+            httpMode: GET
+  - name: provisioning/dashboards/json/empty.js
+    content: |
+      {}
+grafana_config: |
+  [paths]
+  data = {{ grafana_db_dir }}
+  logs = {{ grafana_log_dir }}
+  plugins = {{ grafana_db_dir }}/plugins
+  provisioning = {{ grafana_provisioning_dir }}
+  [server]
+  [database]
+  log_queries =
+  [session]
+  [dataproxy]
+  [analytics]
+  [security]
+  admin_user = {{ grafana_admin_user }}
+  admin_password = {{ grafana_admin_password }}
+  disable_gravatar = true
+  [snapshots]
+  [dashboards]
+  [users]
+  [auth]
+  [auth.anonymous]
+  [auth.github]
+  [auth.google]
+  [auth.generic_oauth]
+  [auth.grafana_com]
+  [auth.proxy]
+  [auth.basic]
+  [auth.ldap]
+  [smtp]
+  [emails]
+  [log]
+  [log.console]
+  [log.file]
+  [log.syslog]
+  [alerting]
+  [metrics]
+  [metrics.graphite]
+  [tracing.jaeger]
+  [grafana_com]
+  [external_image_storage]
+  [external_image_storage.s3]
+  [external_image_storage.webdav]
+  [external_image_storage.gcs]
+  [external_image_storage.azure_blob]
+  [external_image_storage.local]

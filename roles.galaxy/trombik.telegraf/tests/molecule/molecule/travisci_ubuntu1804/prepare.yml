@@ -1,0 +1,13 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Run apt-get update
+      raw: apt-get update
+      become: false
+      changed_when: false
+    - name: Install required packages
+      raw: apt-get install -y --no-install-recommends apt rsyslog systemd systemd-cron sudo
+      become: false
+      changed_when: false

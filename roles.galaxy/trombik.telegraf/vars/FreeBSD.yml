@@ -1,0 +1,8 @@
+---
+__telegraf_user: telegraf
+__telegraf_group: telegraf
+__telegraf_package: net-mgmt/telegraf
+__telegraf_db_dir: /var/db/telegraf
+__telegraf_service: telegraf
+__telegraf_conf_dir: /usr/local/etc
+__telegraf_log_dir: /var/log/telegraf

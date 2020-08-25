@@ -1,0 +1,26 @@
+---
+
+- name: Install telegraf_extra_packages
+  apt:
+    name: "{{ telegraf_extra_packages }}"
+    state: present
+
+- name: Install telegraf
+  apt:
+    name: "{{ telegraf_package }}"
+    state: present
+  notify:
+    - Restart telegraf
+
+- name: Create /etc/default/telegraf
+  template:
+    src: Debian.default.j2
+    dest: "/etc/default/{{ telegraf_service }}"
+    validate: sh -n %s
+  notify:
+    - Restart telegraf
+
+- name: Enable telegraf
+  service:
+    name: "{{ telegraf_service }}"
+    enabled: yes

@@ -1,0 +1,8 @@
+---
+__telegraf_user: telegraf
+__telegraf_group: telegraf
+__telegraf_package: telegraf
+__telegraf_db_dir: /var/lib/telegraf
+__telegraf_service: telegraf
+__telegraf_conf_dir: /etc/telegraf
+__telegraf_log_dir: /var/log/telegraf
