@@ -1,15 +1,6 @@
 ---
 project_influx_service_fqdn: influx.i.trombik.org
 
-# override default on OpenBSD
-# XXX this should be fixed in trombik.nginx
-os_nginx_passlib_package:
-  OpenBSD: py3-passlib
-  FreeBSD: "{{ __nginx_passlib_package }}"
-  Debian: "{{ __nginx_passlib_package }}"
-  RedHat: "{{ __nginx_passlib_package }}"
-nginx_passlib_package: "{{ os_nginx_passlib_package[ansible_os_family] }}"
-
 # _______________________________________________grafana
 project_grafana_port: 3000
 apt_repo_keys_to_add:
