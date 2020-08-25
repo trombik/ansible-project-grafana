@@ -5,13 +5,22 @@ all:
       vagrant_priority: 11
       ansible_host: 172.16.100.200
       vagrant_box: trombik/ansible-openbsd-6.7-amd64
+    mqtt1.i.trombik.org:
+      vagrant_priority: 10
+      ansible_host: 172.16.100.201
+      vagrant_box: trombik/ansible-ubuntu-18.04-amd64
   children:
     grafana:
       hosts:
         grafana1.i.trombik.org:
+    mqtt:
+      hosts:
+        mqtt1.i.trombik.org:
     virtualbox-credentials:
       children:
         grafana:
+        mqtt:
     virtualbox:
       children:
         grafana:
+        mqtt:
