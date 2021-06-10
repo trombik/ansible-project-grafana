@@ -40,6 +40,7 @@ x509_certificate:
 
 # ____________________ mosquitto
 
+mosquitto_pid_dir: /var/run/mosquitto
 mosquitto_include_x509_certificate: yes
 mosquitto_bind_address: "{{ project_mosquitto_bind_address }}"
 mosquitto_port: 8883
