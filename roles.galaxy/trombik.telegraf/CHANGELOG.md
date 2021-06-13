@@ -1,3 +1,11 @@
+## Release 1.1.1
+
+* fbbb275 bugfix: QA
+* 2478660 bugfix: update tests
+* 5ef1bc8 bugfix: remove a patch for FreeBSD
+* 2aa2f01 bugfix: bump box versions
+* 4ab23cf bugfix: QA
+
 ## Release 1.1.0
 
 * 76e3ef6 feature: support telegraf_extra_packages

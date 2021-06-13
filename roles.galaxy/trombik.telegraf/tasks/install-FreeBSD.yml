@@ -12,11 +12,6 @@
   notify:
     - Restart telegraf
 
-- name: Patch rc.d/telegraf
-  patch:
-    src: patch-telegraf
-    dest: /usr/local/etc/rc.d/telegraf
-
 - name: Create /etc/rc.conf.d/telegraf
   template:
     src: FreeBSD.rcd.j2

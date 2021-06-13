@@ -120,18 +120,24 @@ None
         precision = ""
         debug = false
         quiet = false
+        {% if ansible_os_family != "FreeBSD" %}
         logfile = "{{ telegraf_log_dir }}/telegraf.log"
+        {% endif %}
         hostname = "{{ ansible_hostname }}"
         omit_hostname = false
+      {% if ansible_os_family != "OpenBSD" %}
       [[inputs.cpu]]
         percpu = true
         totalcpu = true
         collect_cpu_time = false
         report_active = false
+      {% endif %}
       [[inputs.disk]]
         ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
       [[inputs.diskio]]
+      {% if ansible_os_family != "OpenBSD" %}
       [[inputs.kernel]]
+      {% endif %}
       [[inputs.mem]]
       [[inputs.processes]]
       [[inputs.socket_listener]]

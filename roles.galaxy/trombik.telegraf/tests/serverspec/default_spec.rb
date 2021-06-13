@@ -60,8 +60,14 @@ end
 describe file log_file do
   it { should exist }
   it { should be_file }
-  it { should be_mode 644 }
-  it { should be_owned_by user }
+  case os[:family]
+  when "freebsd"
+    it { should be_mode 600 }
+    it { should be_owned_by default_user }
+  else
+    it { should be_mode 644 }
+    it { should be_owned_by user }
+  end
   it { should be_grouped_into group }
   its(:content) { should match(/Successfully connected to (output: influxdb|outputs.influxdb)/) }
   its(:content) { should_not match(/\s+E!\s+/) }
