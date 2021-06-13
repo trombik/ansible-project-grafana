@@ -12,7 +12,7 @@ ENV["VAGRANT_CWD"] = Pathname.new(File.dirname(__FILE__)).parent.parent.to_s
 # XXX inject vagrant `bin` path to ENV["PATH"]
 # https://github.com/reallyenglish/packer-templates/pull/48
 vagrant_path = ""
-Bundler.with_clean_env do
+Bundler.with_original_env do
   gem_which_vagrant = `gem which vagrant 2>/dev/null`.chomp
   if gem_which_vagrant != ""
     vagrant_path = Pathname
