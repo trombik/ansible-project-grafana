@@ -116,7 +116,7 @@ Vagrant.configure("2") do |config|
                         when /openbsd/
                           "/usr/local/bin/python3"
                         when /freebsd/
-                          "/usr/local/bin/python"
+                          "/usr/local/bin/python3"
                         else
                           "/usr/bin/python"
                         end
