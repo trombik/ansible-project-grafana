@@ -3,8 +3,14 @@
 require_relative "../spec_helper"
 require "net/http"
 
-services = %w[
-  influxdb
+influxdb_service_name = case os[:family]
+                        when "openbsd"
+                          "influxdb"
+                        else
+                          "influxd"
+                        end
+services = [
+  influxdb_service_name
 ]
 
 default_group = case os[:family]
