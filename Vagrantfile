@@ -118,7 +118,7 @@ Vagrant.configure("2") do |config|
                         when /freebsd/
                           "/usr/local/bin/python3"
                         else
-                          "/usr/bin/python"
+                          "/usr/bin/python3"
                         end
           ansible_extra_vars_staging = {
             ansible_python_interpreter: python_path,
