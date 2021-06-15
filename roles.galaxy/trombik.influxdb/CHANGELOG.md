@@ -1,3 +1,18 @@
+## Release 1.2.4
+
+* ee2aa5c bugfix: update __influxdb_management_packages for Debian
+* b9d14ac bugfix: support Devuan, drop influxdb_user_with_grants
+* 62b27ef bugfix: workaround a bug in ansible influxdb module
+
+## Release 1.2.3
+
+* ef6e30c bugfix: update python on Ubuntu, support Ubuntu 20.04
+* 2293495 bugfix: add Publish on Ansible Galaxy
+
+## Release 1.2.2
+
+* 02efcab bugfix: QA and update bump box versions
+
 ## Release 1.2.1
 
 * 15de982 bugfix: QA

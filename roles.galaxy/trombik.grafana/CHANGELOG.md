@@ -1,3 +1,16 @@
+## Release 1.1.5
+
+* 9ebbd76 bugfix: support Ubuntu 20.04
+* 7cd68fa bugfix: add release GitHub Actions workflow
+
+## Release 1.1.4
+
+* c157829 bugfix: QA and bump box versions
+
+## Release 1.1.3
+
+* 54ce6ec bugfix: adjust filename of .ini file
+
 ## Release 1.1.2
 
 * 37b674f bugfix: update FreeBSD box

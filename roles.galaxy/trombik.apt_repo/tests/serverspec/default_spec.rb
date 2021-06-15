@@ -30,20 +30,30 @@ describe file("/usr/bin/gpg") do
 end
 
 describe command("apt-key list") do
-  if os[:release].to_f >= 18.04
+  case os[:family]
+  when "ubuntu"
+    if os[:release].to_f >= 18.04
+      its(:stdout) { should match(/#{elasticsearch_key}/) }
+    else
+      its(:stdout) { should match(/^pub\s+#{elasticsearch_key_id}\s+.*$/) }
+    end
+  when "devuan"
     its(:stdout) { should match(/#{elasticsearch_key}/) }
-  else
-    its(:stdout) { should match(/^pub\s+#{elasticsearch_key_id}\s+.*$/) }
   end
 end
 
-describe file("/etc/apt/sources.list.d/artifacts_elastic_co_packages_5_x_apt.list") do
-  its(:content) { should match(/^deb #{ Regexp.escape("https://artifacts.elastic.co/packages/5.x/apt") } stable main$/) }
+describe file("/etc/apt/sources.list.d/artifacts_elastic_co_packages_7_x_apt.list") do
+  its(:content) { should match(/^deb #{ Regexp.escape("https://artifacts.elastic.co/packages/7.x/apt") } stable main$/) }
 end
 
+# ppa:ubuntuhandbook1/audacity
 case os[:family]
 when "ubuntu"
-  describe file("/etc/apt/sources.list.d/ppa_webupd8team_java_#{codename}.list") do
-    its(:content) { should match(/^deb #{ Regexp.escape("http://ppa.launchpad.net/webupd8team/java/ubuntu") } #{codename} main$/) }
+  describe file("/etc/apt/sources.list.d/ppa_ubuntuhandbook1_audacity_#{codename}.list") do
+    its(:content) { should match(/^deb #{ Regexp.escape("http://ppa.launchpad.net/ubuntuhandbook1/audacity/ubuntu") } #{codename} main$/) }
+  end
+when "devuan"
+  describe file("/etc/apt/sources.list.d/repos_influxdata_com_debian.list") do
+    its(:content) { should match(/^deb #{ Regexp.escape("https://repos.influxdata.com/debian") } \S+ stable$/) }
   end
 end

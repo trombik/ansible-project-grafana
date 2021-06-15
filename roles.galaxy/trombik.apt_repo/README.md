@@ -1,10 +1,10 @@
-# ansible-role-apt_repo
+# `ansible-role-apt_repo`
 
 Add apt keys and apt repositories.
 
 ## Debian and PPA
 
-The role, deliverately, does not support adding PPA repositories in Debian.
+The role, deliberately, does not support adding PPA repositories in Debian.
 
 # Requirements
 
@@ -18,6 +18,12 @@ None
 | `apt_repo_keys_to_add` | list of apt key URLs | `[]` |
 | `apt_repo_enable_apt_transport_https` | install `apt-transport-https` if `True` | `false` |
 | `apt_repo_required_packages`| List of require packages | `{{ __apt_repo_required_packages }}` |
+| `apt_repo_codename_devuan_to_debian` | A dict to map Devuan codename to Debian codename | see below |
+
+## `apt_repo_codename_devuan_to_debian`
+
+A dict to map Devuan codename to Debian codename. Keys are Devuan codename,
+and values are corresponding Debian codename.
 
 ## Debian
 
@@ -39,11 +45,17 @@ None
   vars:
     apt_repo_keys_to_add:
       - https://artifacts.elastic.co/GPG-KEY-elasticsearch
+      - https://repos.influxdata.com/influxdb.key
     dist_apt_repo_to_add:
-      Debian: deb https://artifacts.elastic.co/packages/5.x/apt stable main
+      Debian:
+        - deb https://artifacts.elastic.co/packages/7.x/apt stable main
+      Devuan:
+        - deb https://artifacts.elastic.co/packages/7.x/apt stable main
+        - "deb https://repos.influxdata.com/debian {{ apt_repo_codename_devuan_to_debian[ansible_distribution_release] }} stable"
       Ubuntu:
-        - deb https://artifacts.elastic.co/packages/5.x/apt stable main
-        - ppa:webupd8team/java
+        - deb https://artifacts.elastic.co/packages/7.x/apt stable main
+        - ppa:ubuntuhandbook1/audacity
+
     apt_repo_to_add: "{{ dist_apt_repo_to_add[ansible_distribution] }}"
     apt_repo_enable_apt_transport_https: True
 ```
@@ -51,7 +63,7 @@ None
 # License
 
 ```
-Copyright (c) 2016 Tomoyuki Sakurai <tomoyukis@reallyenglish.com>
+Copyright (c) 2016 Tomoyuki Sakurai <y@trombik.org>
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -68,4 +80,4 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 # Author Information
 
-Tomoyuki Sakurai <tomoyukis@reallyenglish.com>
+Tomoyuki Sakurai <y@trombik.org>
