@@ -50,6 +50,6 @@ feature "Login to sensu-backend" do
     # binding.pry
     fill_in "user", with: account
     fill_in "password", with: password
-    click_button "Log In"
+    click_button "Log in"
   end
 end
