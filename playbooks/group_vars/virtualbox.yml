@@ -7,7 +7,7 @@ hosts_map:
 hosts_enable_localhost: yes
 hosts_extra_localhosts:
   - "{{ inventory_hostname }}"
-project_ingress_address: "{% if ansible_os_family == 'Debian' %}{{ ansible_eth1['ipv4']['address'] }}{% else %}{{ ansible_em1['ipv4'][0]['address'] }}{% endif %}"
+project_ingress_address: "{% if ansible_os_family == 'Debian' %}{{ ansible_enp0s8['ipv4']['address'] }}{% else %}{{ ansible_em1['ipv4'][0]['address'] }}{% endif %}"
 
 # use short delay in test environment
 project_monit_start_delay: 5
