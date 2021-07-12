@@ -32,6 +32,7 @@ None
 | `mosquitto_acl_files`| list of ACL files (see below) | `[]` |
 | `mosquitto_accounts`| list of MQTT account (see below) | `[]` |
 | `mosquitto_accounts_file` | path to MQTT account database file |
+| `mosquitto_use_custom_systemd_service_file` | install custom `systemd` service file (obtained from mosquitto-dev/mosquitto-ppa). see below | `false` |
 
 ## `mosquitto_extra_packages`
 
@@ -64,14 +65,28 @@ must be a dict with keys below.
 | `name` | Name of the MQTT account |
 | `password` | Password of the account |
 
+## `mosquitto_use_custom_systemd_service_file`
+
+Some distributions installs broken `systemd` service file for `mosquitto`,
+which does not support `reload`. If this variable is true, the role installs
+one that supports `reload`. The file is identical to one in
+`mosquitto-dev/mosquitto-ppa` packages.
+
 ## Debian
 
 | Variable | Default |
 |----------|---------|
 | `__mosquitto_user` | `mosquitto` |
-| `__mosquitto_group` | `nogroup` |
+| `__mosquitto_group` | `mosquitto` |
 | `__mosquitto_db_dir` | `/var/lib/mosquitto` |
 | `__mosquitto_conf_dir` | `/etc/mosquitto` |
+| `__mosquitto_pid_dir` | `/var/run/mosquitto` |
+
+## Devuan
+
+| Variable | Default |
+|----------|---------|
+| `__mosquitto_pid_dir` | `/var/run` |
 
 ## FreeBSD
 
@@ -81,6 +96,7 @@ must be a dict with keys below.
 | `__mosquitto_group` | `nobody` |
 | `__mosquitto_db_dir` | `/var/db/mosquitto` |
 | `__mosquitto_conf_dir` | `/usr/local/etc/mosquitto` |
+| `__mosquitto_pid_dir` | `/var/run/mosquitto` |
 
 ## OpenBSD
 
@@ -90,6 +106,7 @@ must be a dict with keys below.
 | `__mosquitto_group` | `_mosquitto` |
 | `__mosquitto_db_dir` | `/var/db/mosquitto` |
 | `__mosquitto_conf_dir` | `/etc/mosquitto` |
+| `__mosquitto_pid_dir` | `/var/run/mosquitto` |
 
 ## RedHat
 
@@ -99,6 +116,7 @@ must be a dict with keys below.
 | `__mosquitto_group` | `mosquitto` |
 | `__mosquitto_db_dir` | `/var/lib/mosquitto` |
 | `__mosquitto_conf_dir` | `/etc/mosquitto` |
+| `__mosquitto_pid_dir` | `/var/run/mosquitto` |
 
 # Dependencies
 
@@ -116,7 +134,6 @@ None
     - name: trombik.apt_repo
       when:
         - ansible_distribution == 'Ubuntu'
-        - ansible_distribution_version is version('18.04', '<')
     - name: ansible-role-mosquitto
   vars:
     ca_cert_file: "{{ mosquitto_conf_dir }}/certs/ca.pem"

@@ -23,6 +23,7 @@ when "freebsd"
   ca_file = "/etc/ssl/cert.pem"
 when "ubuntu"
   group = "mosquitto"
+when "devuan"
   pid_dir = "/var/run"
 when "openbsd"
   user = "_mosquitto"
@@ -54,7 +55,7 @@ describe user user do
 end
 
 case os[:family]
-when "ubuntu"
+when "ubuntu", "devuan"
   describe package("mosquitto-clients") do
     it { should be_installed }
   end
@@ -121,18 +122,14 @@ describe file(db_dir) do
   it { should be_grouped_into group }
 end
 
-describe file(pid_dir) do
-  it { should exist }
-  case os[:family]
-  when "ubuntu"
-    it { should be_owned_by default_user }
-    it { should be_grouped_into default_group }
-  else
+if pid_dir != "/var/run"
+  describe file(pid_dir) do
+    it { should exist }
     it { should be_mode 755 }
     it { should be_owned_by user }
     it { should be_grouped_into group }
+    it { should be_directory }
   end
-  it { should be_directory }
 end
 
 # XXX the init script in CentOS package runs the daemon without "-d" flag.
@@ -143,15 +140,18 @@ if os[:family] != "redhat"
     it { should be_file }
     it { should be_mode 644 }
     case os[:family]
-    when "ubuntu"
-      it { should be_owned_by default_user }
+    when "devuan"
       it { should be_grouped_into default_group }
+    else
+      it { should be_grouped_into group }
+    end
+    case os[:family]
     when "openbsd"
       it { should be_owned_by mosquitto_version.split(".").first.to_i < 2 ? default_user : user }
-      it { should be_grouped_into group }
+    when "devuan"
+      it { should be_owned_by default_user }
     else
       it { should be_owned_by user }
-      it { should be_grouped_into group }
     end
   end
 end
@@ -189,7 +189,7 @@ end
 
 describe command "echo | openssl s_client -connect 10.0.2.15:1883 -tls1_2" do
   case os[:family]
-  when "ubuntu", "redhat"
+  when "ubuntu", "redhat", "devuan"
     its(:stderr) { should match(/write:errno=104/) }
   when "openbsd"
     its(:stderr) { should match(/read:errno=0/) }
