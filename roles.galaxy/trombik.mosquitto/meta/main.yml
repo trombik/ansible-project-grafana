@@ -17,6 +17,10 @@ galaxy_info:
     - name: Ubuntu
       versions:
         - bionic
+        - focal
+    - name: Devuan
+      versions:
+        - beowulf
     - name: EL
       versions:
         - 7
