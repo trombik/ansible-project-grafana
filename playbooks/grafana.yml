@@ -15,6 +15,8 @@
     - role: trombik.vim
     - role: trombik.zsh
     - role: trombik.git
+    - role: trombik.tmux
+      when: ansible_os_family != 'OpenBSD'
     - role: trombik.sudo
     - role: trombik.user
     - role: trombik.influxdb
