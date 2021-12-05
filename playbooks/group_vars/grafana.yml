@@ -19,12 +19,19 @@ grafana_extra_packages: []
 grafana_plugins:
   - name: agenty-flowcharting-panel
     state: present
+  - name: fetzerch-sunandmoon-datasource
+    state: present
 os_grafana_flags:
   FreeBSD: |
     grafana_conf={{ grafana_conf_file }}
   OpenBSD: ""
   Debian: ""
 
+os_grafana_package:
+  FreeBSD: www/grafana7
+  OpenBSD: "{{ __grafana_package }}"
+  Debian: "{{ __grafana_package }}"
+grafana_package: "{{ os_grafana_package[ansible_os_family] }}"
 grafana_flags: "{{ os_grafana_flags[ansible_os_family] }}"
 grafana_addr: 127.0.0.1
 grafana_conf_file: "{{ grafana_conf_dir }}/config.ini"
@@ -78,6 +85,7 @@ grafana_config: |
 # _______________________________________________telgraf
 telegraf_config: |
   [global_tags]
+    database = "hosts"
   [agent]
     interval = "10s"
     round_interval = true
@@ -92,23 +100,78 @@ telegraf_config: |
     logfile = "{{ telegraf_log_dir }}/telegraf.log"
     hostname = "{{ ansible_hostname }}"
     omit_hostname = false
+  [[inputs.diskio]]
+  [[inputs.mem]]
+  [[inputs.processes]]
+  [[inputs.cpu]]
+    percpu = true
+    totalcpu = true
+    collect_cpu_time = false
+    report_active = false
   [[inputs.mqtt_consumer]]
     servers = ["tcp://{{ project_mqtt_host }}:1883"]
     username = "{{ project_mqtt_user }}"
     password = "{{ project_mqtt_password }}"
+    # esphome/lobby/sensor/ambient/sensor/humidity/state
     topics = [
-      "homie/+/icmp/influx",
+      "esphome/+/+/+/sensor/+/influx"
     ]
     persistent_session = false
     qos = 1
     client_id = "telegraf"
     data_format = "influx"
+    [inputs.mqtt_consumer.tags]
+      database = "sensors"
+  [[inputs.dns_query]]
+    servers = ["a.dns.jp", "b.dns.jp", "c.dns.jp"]
+    network = "udp"
+    domains = ["jp"]
+    record_type = "NS"
+    port = 53
+    timeout = 10
+    [inputs.dns_query.tags]
+      database = "network"
+  [[inputs.dns_query]]
+    servers = ["8.8.8.8", "180.178.124.12", "96.9.64.12"]
+    network = "udp"
+    domains = ["."]
+    record_type = "NS"
+    port = 53
+    timeout = 10
+    [inputs.dns_query.tags]
+      database = "network"
+  [[inputs.ping]]
+    # XXX ICMP does not work in VirtualBox network
+    urls = ["96.9.84.193", "8.8.8.8"]
+    method = "exec"
+    count = 10
+    binary = "/sbin/ping"
+    [inputs.ping.tags]
+      database = "network"
   [[outputs.influxdb]]
     urls = ["http://{{ project_influxdb_host }}:8086"]
     database = "sensors"
     username = "{{ project_telegraf_influxdb_user }}"
     password = "{{ project_telegraf_influxdb_password }}"
     skip_database_creation = true
+    [outputs.influxdb.tagpass]
+      database = ["sensors"]
+  [[outputs.influxdb]]
+    urls = ["http://{{ project_influxdb_host }}:8086"]
+    database = "hosts"
+    username = "{{ project_telegraf_influxdb_user }}"
+    password = "{{ project_telegraf_influxdb_password }}"
+    skip_database_creation = true
+    [outputs.influxdb.tagpass]
+      database = ["hosts"]
+  [[outputs.influxdb]]
+    urls = ["http://{{ project_influxdb_host }}:8086"]
+    database = "network"
+    username = "{{ project_telegraf_influxdb_user }}"
+    password = "{{ project_telegraf_influxdb_password }}"
+    skip_database_creation = true
+    [outputs.influxdb.tagpass]
+      database = ["network"]
 
 # _______________________________________________nginx
 os_project_www_root_dir:
@@ -170,6 +233,12 @@ influxdb_bind_address: "{{ project_ingress_address }}:8086"
 influxdb_databases:
   - database_name: sensors
     state: present
+  - database_name: hosts
+    state: present
+  - database_name: network
+    state: present
+  - database_name: hass
+    state: present
 influxdb_config: |
   reporting-disabled = true
   # this one is bind address for backup process
@@ -225,28 +294,28 @@ monit_rc:
     state: present
     content: |
       check process sshd with pidfile /var/run/sshd.pid
-        start program = "/usr/sbin/rcctl start sshd"
-        stop program = "/usr/sbin/rcctl stop sshd"
+        start program = "/usr/sbin/service sshd start"
+        stop program = "/usr/sbin/service sshd stop"
         every 2 cycles
         if failed port 22 protocol ssh then restart
   nginx:
     state: present
     content: |
       check process nginx with pidfile /var/run/nginx.pid
-      start program = "/usr/sbin/rcctl start nginx"
-      stop program = "/usr/sbin/rcctl stop nginx"
+      start program = "/usr/sbin/service nginx start"
+      stop program = "/usr/sbin/service nginx stop"
       if failed host {{ project_ingress_address }} port 80 protocol http for 3 cycles then restart
   grafana:
     state: present
     content: |
       check process grafana matching grafana-server
-      start program = "/usr/sbin/rcctl start grafana"
-      stop program = "/usr/sbin/rcctl stop grafana"
+      start program = "/usr/sbin/service grafana start"
+      stop program = "/usr/sbin/service grafana stop"
       if failed host 127.0.0.1 port 3000 protocol http for 3 cycles then restart
   influxdb:
     state: present
     content: |
       check process influxdb matching influxd
-      start program = "/usr/sbin/rcctl start influxdb"
-      stop program = "/usr/sbin/rcctl stop influxdb"
+      start program = "/usr/sbin/service influxdb start"
+      stop program = "/usr/sbin/service influxdb stop"
       if failed host {{ influxdb_bind_address.split(":") | first }} port {{ influxdb_bind_address.split(":") | last }} protocol http request "/" status = 404 for 3 cycles then restart
