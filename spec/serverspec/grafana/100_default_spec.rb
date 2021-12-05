@@ -42,7 +42,7 @@ user = credentials_yaml["project_grafana_influxdb_user"]
 password = credentials_yaml["project_grafana_influxdb_password"]
 host = case test_environment
        when "prod"
-         "nex1.i.trombik.org"
+         "grafana2.i.trombik.org"
        when "virtualbox"
          "172.16.100.200"
        end
