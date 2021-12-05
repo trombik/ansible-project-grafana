@@ -23,5 +23,6 @@
     - role: trombik.grafana
     - role: trombik.telegraf
     - role: trombik.nginx
+    - role: trombik.home_assistant
     - role: trombik.monit
   vars:

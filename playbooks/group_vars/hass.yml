@@ -1,0 +1,45 @@
+---
+home_assistant_wait_for_host: grafana2.i.trombik.org
+
+home_assistant_config:
+- name: configuration.yaml
+  content: |
+    # Configure a default setup of Home Assistant (frontend, api, etc)
+    default_config:
+
+    homeassistant:
+      name: My Home Assistant
+      latitude: 0.0
+      longitude: 0.0
+      elevation: 65535
+      currency: USD
+      time_zone: Asia/Tokyo
+    http:
+      server_host: {{ home_assistant_host }}
+      server_port: {{ home_assistant_port }}
+      trusted_proxies: 127.0.0.1
+      use_x_forwarded_for: true
+
+    # Text to speech
+    tts:
+      - platform: google_translate
+
+    group: !include groups.yaml
+    automation: !include automations.yaml
+    script: !include scripts.yaml
+    scene: !include scenes.yaml
+- name: secrets.yaml
+  content: ""
+  mode: "0640"
+- name: foo/bar.yaml
+  content: ""
+  mode: "0640"
+- name: groups.yaml
+  content: ""
+- name: automations.yaml
+  content: |
+    []
+- name: scripts.yaml
+  content: ""
+- name: scenes.yaml
+  content: ""
