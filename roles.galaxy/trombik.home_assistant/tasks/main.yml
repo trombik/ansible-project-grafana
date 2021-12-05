@@ -1,0 +1,75 @@
+---
+# tasks file for ansible-role-home-assistant
+
+- name: "Include {{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: "Include install-{{ ansible_os_family }}.yml"
+  include: "install-{{ ansible_os_family }}.yml"
+
+- name: Create directory for configuration YAML files
+  ansible.builtin.file:
+    path: "{{ home_assistant_conf_dir }}/{{ item['name'] | dirname }}"
+    state: directory
+    owner: "{{ home_assistant_user }}"
+    group: "{{ home_assistant_group }}"
+    mode: "0755"
+  with_items: "{{ home_assistant_config }}"
+  when:
+    - item['state'] | default('present') == 'present'
+  notify: Restart home-assistant
+
+- name: Create configuration YAML files
+  ansible.builtin.template:
+    src: yaml.j2
+    dest: "{{ home_assistant_conf_dir }}/{{ item['name'] }}"
+    mode: "{{ item['mode'] | default('0644') }}"
+    owner: "{{ item['owner'] | default(home_assistant_user) }}"
+    group: "{{ item['group'] | default(home_assistant_group) }}"
+  with_items: "{{ home_assistant_config }}"
+  when:
+    - item['state'] | default('present') == 'present'
+  notify: Restart home-assistant
+
+- name: Delete configuration YAML files
+  ansible.builtin.file:
+    path: "{{ home_assistant_conf_dir }}/{{ item['name'] }}"
+    state: absent
+  with_items: "{{ home_assistant_config }}"
+  when:
+    - item['state'] | default('present') == 'absent'
+  notify: Restart home-assistant
+
+- name: Start home-assistant
+  ansible.builtin.service:
+    name: "{{ home_assistant_service }}"
+    enabled: true
+    state: started
+
+- name: Wait for home_assistant_service to start (in task)
+  ansible.builtin.uri:
+    # FIXME what if self-signed TLS certificate?
+    url: "{{ home_assistant_wait_for_url }}"
+    status_code: "{{ home_assistant_wait_for_status }}"
+    headers: "{{ home_assistant_wait_for_headers }}"
+    method: "{{ home_assistant_wait_for_method }}"
+    return_content: yes
+  register: __home_assistant_wait_for_url
+  retries: "{{ home_assistant_wait_for_retries }}"
+  delay: "{{ home_assistant_wait_for_delay }}"
+  until:
+    # XXX the process does other tasks, such as installing integrations, even
+    # after web interface is up and running. wait until it is not
+    # "Initializing".
+    #
+    # XXX hass accepts HTTP connections for a bit (and refuses after that)
+    # even when it's still working on installing integrations during the
+    # startup.
+    #
+    # XXX the startup script cannot kill the subprocess of pip. when you stop
+    # hass, the pip process will reamin.
+    #
+    # XXX to solve the problem, hass should provide API access to its status
+    # (or find out pre-configure API token).
+    - __home_assistant_wait_for_url['status'] == home_assistant_wait_for_status
+    - __home_assistant_wait_for_url['content'].find('Initializing') <= 0
