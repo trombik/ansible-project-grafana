@@ -17,3 +17,4 @@
 - name: trombik.mosquitto
 - name: trombik.tmux
 - name: trombik.x509_certificate
+- name: trombik.home_assistant
