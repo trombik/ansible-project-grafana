@@ -1,4 +1,5 @@
 ---
+vim_package: vim
 sudo_sudoer: |
   root ALL=(ALL) ALL
   %wheel	ALL=(ALL) ALL
