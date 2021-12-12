@@ -83,6 +83,8 @@ grafana_config: |
   [external_image_storage.local]
 
 # _______________________________________________telgraf
+telegraf_extra_packages:
+  - net-snmp
 telegraf_config: |
   [global_tags]
     database = "hosts"
@@ -148,6 +150,51 @@ telegraf_config: |
     binary = "/sbin/ping"
     [inputs.ping.tags]
       database = "network"
+  [[inputs.http_response]]
+    urls = ["https://news1005.mcot.net/", "https://www.royaloffice.th/"]
+    interval = "10m"
+    [inputs.http_response.headers]
+      User-Agent = "User-Agent: Mozilla/5.0 (X11; FreeBSD amd64; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36"
+    [inputs.http_response.tags]
+      database = "network"
+
+  [[inputs.snmp]]
+    agents = [ "192.168.2.253" ]
+    version = 3
+    sec_name = "{{ project_snmp_v3['tplink']['sec_name'] }}"
+    auth_protocol = "{{ project_snmp_v3['tplink']['auth_protocol'] }}"
+    auth_password = "{{ project_snmp_v3['tplink']['auth_password'] }}"
+    sec_level = "{{ project_snmp_v3['tplink']['sec_level'] }}"
+    priv_protocol = "{{ project_snmp_v3['tplink']['priv_protocol'] }}"
+    priv_password = "{{ project_snmp_v3['tplink']['priv_password'] }}"
+    [inputs.snmp.tags]
+      database = "network"
+    [[inputs.snmp.field]]
+      name = "hostname"
+      oid = "RFC1213-MIB::sysName.0"
+      is_tag = true
+    [[inputs.snmp.field]]
+      name = "uptime"
+      oid = "RFC1213-MIB::sysUpTime.0"
+
+    [[inputs.snmp.table]]
+      name = "interface"
+      inherit_tags = [ "hostname" ]
+      oid = "IF-MIB::ifTable"
+      [[inputs.snmp.table.field]]
+        name = "ifDescr"
+        oid = "IF-MIB::ifDescr"
+        is_tag = true
+
+    [[inputs.snmp.table]]
+      name = "interface"
+      inherit_tags = [ "hostname" ]
+      oid = "IF-MIB::ifXTable"
+      [[inputs.snmp.table.field]]
+        name = "ifDescr"
+        oid = "IF-MIB::ifDescr"
+        is_tag = true
+
   [[outputs.influxdb]]
     urls = ["http://{{ project_influxdb_host }}:8086"]
     database = "sensors"
