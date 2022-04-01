@@ -363,6 +363,6 @@ monit_rc:
     state: present
     content: |
       check process influxdb matching influxd
-      start program = "/usr/sbin/service influxdb start"
-      stop program = "/usr/sbin/service influxdb stop"
+      start program = "/usr/sbin/service influxd start"
+      stop program = "/usr/sbin/service influxd stop"
       if failed host {{ influxdb_bind_address.split(":") | first }} port {{ influxdb_bind_address.split(":") | last }} protocol http request "/" status = 404 for 3 cycles then restart
